@@ -1,5 +1,4 @@
 import json
-import re
 from pathlib import Path
 
 import yaml
@@ -8,24 +7,25 @@ import yaml
 PLUGIN_ROOT = Path("plugins/shopops-onboarding")
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
 SKILL_SPECS = {
-    "shopops-onboard": "onboard",
-    "shopops-doctor": "diagnose",
+    "shopops-onboard": {
+        "scope": "onboard",
+        "body": (
+            "Act only after the user explicitly invokes this skill.",
+            "WP1 does not yet provide an automated project connection workflow. "
+            "Tell the user that ShopOps Reporter onboarding is unavailable in WP1, "
+            "then stop without inspecting or modifying a project.",
+        ),
+    },
+    "shopops-doctor": {
+        "scope": "diagnose",
+        "body": (
+            "Act only after the user explicitly invokes this skill.",
+            "WP1 does not yet provide onboarding diagnostics. Tell the user that "
+            "ShopOps Reporter diagnostics are unavailable in WP1, then stop without "
+            "inspecting or modifying a project.",
+        ),
+    },
 }
-FORBIDDEN_SKILL_ACTIONS = (
-    re.compile(
-        r"\b(?:run|execute|scan|inspect|analy[sz]e|modify|write)\b"
-        r"\s+(?:(?:the|a|an|this|that|local)\s+)?(?:project|script)s?\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(?:run|execute|invoke|trigger|start)\b\s+(?:the\s+)?"
-        r"(?:shopops\s+)?reporter\b(?:\s+(?:business\s+)?"
-        r"(?:run|workflow|job|report))?",
-        re.IGNORECASE,
-    ),
-    re.compile(r"(?:运行|执行|扫描|查看|检查|分析|修改|写|写入|编写)\s*(?:本地\s*)?(?:项目|脚本)"),
-    re.compile(r"(?:运行|执行|调用|触发|启动)\s*(?:ShopOps\s*)?Reporter(?:\s*(?:业务|任务|工作流|运行))?"),
-)
 
 
 def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
@@ -79,8 +79,8 @@ def test_plugin_has_only_the_two_wp1_skill_entrypoints():
     }
 
 
-def test_wp1_skills_require_explicit_invocation_and_stop_without_project_actions():
-    for skill_name, expected_scope in SKILL_SPECS.items():
+def test_wp1_skills_match_the_approved_safe_body_contract():
+    for skill_name, expected in SKILL_SPECS.items():
         contents = (SKILLS_ROOT / skill_name / "SKILL.md").read_text()
         assert contents.startswith("---\n"), f"{skill_name} must have YAML frontmatter"
         frontmatter_end = contents.find("\n---\n", 4)
@@ -97,13 +97,10 @@ def test_wp1_skills_require_explicit_invocation_and_stop_without_project_actions
         assert description.strip()
         assert "shopops reporter" in description
         assert "explicitly invoked" in description
-        assert expected_scope in description
+        assert expected["scope"] in description
         assert "[todo:" not in contents.lower()
 
-        paragraphs = [paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()]
-        normalized_body = body.lower()
-        assert len(paragraphs) == 2
-        assert "act only after the user explicitly invokes this skill." in normalized_body
-        assert "wp1 does not yet provide" in normalized_body
-        assert "then stop without inspecting or modifying a project." in normalized_body
-        assert not any(pattern.search(body) for pattern in FORBIDDEN_SKILL_ACTIONS)
+        paragraphs = tuple(
+            paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()
+        )
+        assert paragraphs == expected["body"]
