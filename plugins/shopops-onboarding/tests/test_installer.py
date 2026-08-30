@@ -36,9 +36,10 @@ def write_fake_wheel(path: Path, version: str) -> None:
     """Create a tiny offline wheel with the real Reporter console-script name."""
     dist_info = f"shopops_reporter-{version}.dist-info"
     with ZipFile(path, "w", ZIP_DEFLATED) as wheel:
-        wheel.writestr("shopops_fake_reporter/__init__.py", "")
+        wheel.writestr("shopops_reporter/__init__.py", "")
+        wheel.writestr("shopops_reporter/__main__.py", "from .cli import main\nraise SystemExit(main())\n")
         wheel.writestr(
-            "shopops_fake_reporter/cli.py",
+            "shopops_reporter/cli.py",
             "import json\n"
             "def main():\n"
             "    print(json.dumps({'action': 'status', 'state': 'not_paired'}))\n"
@@ -52,7 +53,7 @@ def write_fake_wheel(path: Path, version: str) -> None:
             f"{dist_info}/WHEEL",
             "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
         )
-        wheel.writestr(f"{dist_info}/entry_points.txt", "[console_scripts]\nshopops-report = shopops_fake_reporter.cli:main\n")
+        wheel.writestr(f"{dist_info}/entry_points.txt", "[console_scripts]\nshopops-report = shopops_reporter.cli:main\n")
         wheel.writestr(f"{dist_info}/RECORD", "")
 
 
@@ -128,6 +129,19 @@ def test_reporter_survives_plugin_source_removal(tmp_path, supported_probe):
     completed = subprocess.run([result.shim_path, "--json", "status"], capture_output=True, text=True)
     assert completed.returncode in (0, 2)
     assert json.loads(completed.stdout)["action"] == "status"
+
+
+def test_install_rechecks_a_whitespace_safe_final_launcher(tmp_path, supported_probe):
+    _, plugin_root = fake_wheelhouse(tmp_path)
+    reporter_home = tmp_path / "Reporter Home"
+
+    result = install_reporter(plugin_root, reporter_home, supported_probe)
+    completed = subprocess.run([result.shim_path, "--json", "status"], capture_output=True, text=True)
+
+    assert completed.returncode == 2
+    assert json.loads(completed.stdout)["action"] == "status"
+    launcher = (reporter_home / "runtime" / "0.1.0" / "venv" / "bin" / "shopops-report").read_text()
+    assert launcher.startswith("#!/bin/sh\nexec '")
 
 
 def test_install_is_idempotent_after_a_healthy_versioned_runtime(tmp_path, supported_probe):

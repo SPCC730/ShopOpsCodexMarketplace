@@ -95,6 +95,8 @@ def install_reporter(
         os.replace(staging_dir, runtime_dir)
         installed_runtime = True
         _relocate_console_script(reporter_binary)
+        if not self_check(reporter_binary):
+            raise InstallError("self_check_failed")
         _ensure_shim(shim_path, reporter_binary)
     except Exception:
         if installed_runtime:
@@ -283,15 +285,12 @@ def _ensure_shim(shim_path: Path, reporter_binary: Path) -> bool:
 
 
 def _relocate_console_script(reporter_binary: Path) -> None:
-    """Update pip's staged console-script shebang after moving the venv into place."""
-    try:
-        lines = reporter_binary.read_text(encoding="utf-8").splitlines(keepends=True)
-    except OSError as error:
-        raise InstallError("missing_reporter_binary") from error
-    if not lines or not lines[0].startswith("#!"):
-        raise InstallError("invalid_reporter_binary")
-    lines[0] = f"#!{reporter_binary.parent / 'python'}\n"
-    reporter_binary.write_text("".join(lines), encoding="utf-8")
+    """Write a shell-safe final launcher after moving a staged venv."""
+    python = reporter_binary.parent / "python"
+    if not python.is_file():
+        raise InstallError("missing_reporter_binary")
+    launcher = f"#!/bin/sh\nexec {shlex.quote(str(python))} -m shopops_reporter \"$@\"\n"
+    reporter_binary.write_text(launcher, encoding="utf-8")
     reporter_binary.chmod(0o700)
 
 
