@@ -6,26 +6,7 @@ import yaml
 
 PLUGIN_ROOT = Path("plugins/shopops-onboarding")
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
-SKILL_SPECS = {
-    "shopops-onboard": {
-        "scope": "onboard",
-        "body": (
-            "Act only after the user explicitly invokes this skill.",
-            "WP1 does not yet provide an automated project connection workflow. "
-            "Tell the user that ShopOps Reporter onboarding is unavailable in WP1, "
-            "then stop without inspecting or modifying a project.",
-        ),
-    },
-    "shopops-doctor": {
-        "scope": "diagnose",
-        "body": (
-            "Act only after the user explicitly invokes this skill.",
-            "WP1 does not yet provide onboarding diagnostics. Tell the user that "
-            "ShopOps Reporter diagnostics are unavailable in WP1, then stop without "
-            "inspecting or modifying a project.",
-        ),
-    },
-}
+SKILL_SCOPES = {"shopops-onboard": "onboard", "shopops-doctor": "diagnose"}
 
 
 def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
@@ -81,8 +62,8 @@ def test_plugin_has_only_the_two_wp1_skill_entrypoints():
     }
 
 
-def test_wp1_skills_match_the_approved_safe_body_contract():
-    for skill_name, expected in SKILL_SPECS.items():
+def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
+    for skill_name, scope in SKILL_SCOPES.items():
         contents = (SKILLS_ROOT / skill_name / "SKILL.md").read_text()
         assert contents.startswith("---\n"), f"{skill_name} must have YAML frontmatter"
         frontmatter_end = contents.find("\n---\n", 4)
@@ -99,10 +80,22 @@ def test_wp1_skills_match_the_approved_safe_body_contract():
         assert description.strip()
         assert "shopops reporter" in description
         assert "explicitly invoked" in description
-        assert expected["scope"] in description
+        assert scope in description
         assert "[todo:" not in contents.lower()
 
-        paragraphs = tuple(
-            paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()
-        )
-        assert paragraphs == expected["body"]
+        assert "Act only after the developer explicitly invokes this skill." in body
+        assert "business" in body and "project" in body
+
+
+def test_wp1_skills_keep_the_required_authorization_and_retention_boundaries():
+    onboard = (SKILLS_ROOT / "shopops-onboard" / "SKILL.md").read_text()
+    doctor = (SKILLS_ROOT / "shopops-doctor" / "SKILL.md").read_text()
+
+    assert "install-preview" in onboard
+    assert "等待开发者明确确认" in onboard
+    assert onboard.index("等待开发者明确确认") < onboard.index("--confirm-version")
+    assert "never install, repair, delete, enroll, pair, or change runtime" in doctor
+    for text in (onboard, doctor):
+        assert "Removing this" in text
+        assert "Codex plugin does not remove Reporter" in text
+        assert "device identity, queued runs, and projects before confirmation" in text

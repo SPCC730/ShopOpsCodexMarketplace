@@ -3,6 +3,34 @@ name: shopops-onboard
 description: Handle an explicitly invoked WP1 request to onboard a local script project to ShopOps Reporter; do not use for general ShopOps assistance.
 ---
 
-Act only after the user explicitly invokes this skill.
+Act only after the developer explicitly invokes this skill. WP1 installs the local
+Reporter runtime only; it does not inspect, scan, connect, or execute a business
+project, and it does not enroll a device.
 
-WP1 does not yet provide an automated project connection workflow. Tell the user that ShopOps Reporter onboarding is unavailable in WP1, then stop without inspecting or modifying a project.
+1. From the installed plugin directory, run
+   `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. Report the
+   JSON result and stop if `environment.supported` is false. WP1 supports only
+   macOS Apple Silicon with CPython 3.11 or 3.12.
+2. Run
+   `PYTHONPATH=tools python3 -m shopops_plugin_helper install-preview --json`.
+   This validates the checksum-locked offline wheelhouse and reports the exact
+   Reporter version, runtime directory, stable shim, and whether a change is
+   needed. Explain that the installer uses `pip --no-index` and never contacts
+   PyPI.
+3. Show the complete preview, including the version and paths. 等待开发者明确确认
+   the exact previewed version before running any install command. Do not infer
+   confirmation from the original request or from a prior confirmation.
+4. Only after that confirmation, run
+   `PYTHONPATH=tools python3 -m shopops_plugin_helper install --confirm-version <previewed-version> --json`.
+   Do not substitute a different version. Report the returned runtime and stable
+   shim paths.
+5. Run the returned stable shim as
+   `<shim-path> --json status` and show its JSON health result. A `not_paired`
+   result is a valid installed-but-unpaired state; do not enroll or pair a device
+   in WP1.
+
+Stop after installation and health reporting. For safety, cleanup is a separate
+explicit operation outside WP1 and must first preview affected runtime versions,
+device identity, queued runs, and projects before confirmation. Removing this
+Codex plugin does not remove Reporter, its device identity, queue, or project
+launch capability. See [the security policy](../../references/security-policy.md).
