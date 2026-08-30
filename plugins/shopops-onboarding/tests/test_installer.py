@@ -1,0 +1,200 @@
+"""Behavioral coverage for offline, atomic Reporter installation."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import stat
+import subprocess
+import sys
+from zipfile import ZIP_DEFLATED, ZipFile
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+
+from shopops_plugin_helper import __main__, installer
+from shopops_plugin_helper.environment import EnvironmentProbe
+from shopops_plugin_helper.installer import InstallError, InstallResult, install_reporter, self_check
+
+
+@pytest.fixture
+def supported_probe() -> EnvironmentProbe:
+    return EnvironmentProbe(
+        os_name="Darwin",
+        architecture="arm64",
+        python_executable=sys.executable,
+        python_version="3.12.0",
+        supported=True,
+        reason=None,
+    )
+
+
+def write_fake_wheel(path: Path, version: str) -> None:
+    """Create a tiny offline wheel with the real Reporter console-script name."""
+    dist_info = f"shopops_reporter-{version}.dist-info"
+    with ZipFile(path, "w", ZIP_DEFLATED) as wheel:
+        wheel.writestr("shopops_fake_reporter/__init__.py", "")
+        wheel.writestr(
+            "shopops_fake_reporter/cli.py",
+            "import json\n"
+            "def main():\n"
+            "    print(json.dumps({'action': 'status', 'state': 'not_paired'}))\n"
+            "    return 2\n",
+        )
+        wheel.writestr(
+            f"{dist_info}/METADATA",
+            f"Metadata-Version: 2.1\nName: shopops-reporter\nVersion: {version}\n",
+        )
+        wheel.writestr(
+            f"{dist_info}/WHEEL",
+            "Wheel-Version: 1.0\nGenerator: test\nRoot-Is-Purelib: true\nTag: py3-none-any\n",
+        )
+        wheel.writestr(f"{dist_info}/entry_points.txt", "[console_scripts]\nshopops-report = shopops_fake_reporter.cli:main\n")
+        wheel.writestr(f"{dist_info}/RECORD", "")
+
+
+def fake_wheelhouse(tmp_path: Path, *, tampered: bool = False, version: str = "0.1.0") -> tuple[dict[str, object], Path]:
+    plugin_root = tmp_path / "plugin"
+    entries = []
+    checksums: dict[str, str] = {}
+    for abi in ("cp311", "cp312"):
+        wheel_dir = plugin_root / "wheelhouse" / "macos-arm64" / abi
+        wheel_dir.mkdir(parents=True)
+        wheel = wheel_dir / f"shopops_reporter-{version}-py3-none-any.whl"
+        write_fake_wheel(wheel, version)
+        digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+        entries.append(
+            {
+                "platform": "macos-arm64",
+                "python": abi.removeprefix("cp"),
+                "reporter_version": version,
+                "files": [{"name": wheel.name, "sha256": digest}],
+            }
+        )
+        checksums[f"wheelhouse/macos-arm64/{abi}/{wheel.name}"] = digest
+
+    manifest: dict[str, object] = {"wheelhouses": entries}
+    (plugin_root / "reporter-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (plugin_root / "checksums.json").write_text(json.dumps(checksums), encoding="utf-8")
+    if tampered:
+        wheel = plugin_root / "wheelhouse/macos-arm64/cp312" / f"shopops_reporter-{version}-py3-none-any.whl"
+        wheel.write_bytes(wheel.read_bytes() + b"tampered")
+    return manifest, plugin_root
+
+
+def fake_plugin_root(tmp_path: Path) -> Path:
+    return fake_wheelhouse(tmp_path)[1]
+
+
+def install_fake_version(tmp_path: Path, version: str) -> Path:
+    runtime = tmp_path / "home" / "runtime" / version
+    executable = runtime / "venv" / "bin" / "shopops-report"
+    executable.parent.mkdir(parents=True)
+    executable.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    executable.chmod(0o700)
+    shim = tmp_path / "home" / "bin" / "shopops-report"
+    shim.parent.mkdir(parents=True)
+    shim.write_text(f"#!/bin/sh\nexec '{executable}' \"$@\"\n", encoding="utf-8")
+    shim.chmod(0o700)
+    return runtime
+
+
+def read_current_target(reporter_home: Path) -> Path:
+    shim = (reporter_home / "bin" / "shopops-report").read_text(encoding="utf-8")
+    return Path(shim.split("exec '", 1)[1].split("'", 1)[0]).parents[2]
+
+
+def test_install_rejects_a_tampered_wheel(tmp_path, supported_probe):
+    _, plugin_root = fake_wheelhouse(tmp_path, tampered=True)
+    with pytest.raises(InstallError, match="checksum_mismatch"):
+        install_reporter(plugin_root, tmp_path / "home", supported_probe)
+
+
+def test_failed_self_check_keeps_previous_shim(tmp_path, supported_probe, monkeypatch):
+    old = install_fake_version(tmp_path, "0.0.9")
+    monkeypatch.setattr(installer, "self_check", lambda _python: False)
+    with pytest.raises(InstallError, match="self_check_failed"):
+        install_reporter(fake_plugin_root(tmp_path), tmp_path / "home", supported_probe)
+    assert read_current_target(tmp_path / "home") == old
+
+
+def test_reporter_survives_plugin_source_removal(tmp_path, supported_probe):
+    plugin_root = fake_plugin_root(tmp_path)
+    result = install_reporter(plugin_root, tmp_path / "home", supported_probe)
+    shutil.rmtree(plugin_root)
+    completed = subprocess.run([result.shim_path, "--json", "status"], capture_output=True, text=True)
+    assert completed.returncode in (0, 2)
+    assert json.loads(completed.stdout)["action"] == "status"
+
+
+def test_install_is_idempotent_after_a_healthy_versioned_runtime(tmp_path, supported_probe):
+    _, plugin_root = fake_wheelhouse(tmp_path)
+    first = install_reporter(plugin_root, tmp_path / "home", supported_probe)
+    second = install_reporter(plugin_root, tmp_path / "home", supported_probe)
+
+    assert first.changed is True
+    assert second == InstallResult(
+        version="0.1.0",
+        runtime_dir=str(tmp_path / "home" / "runtime" / "0.1.0"),
+        shim_path=str(tmp_path / "home" / "bin" / "shopops-report"),
+        changed=False,
+    )
+    assert stat.S_IMODE((tmp_path / "home" / "bin" / "shopops-report").stat().st_mode) == 0o700
+
+
+def test_self_check_accepts_the_locked_reporters_legacy_unpaired_status(tmp_path, monkeypatch):
+    reporter_binary = tmp_path / "home" / "runtime" / "0.1.0" / "venv" / "bin" / "shopops-report"
+    reporter_binary.parent.mkdir(parents=True)
+    reporter_binary.touch()
+
+    class CompletedProcess:
+        returncode = 2
+        stdout = json.dumps(
+            {
+                "action": "status",
+                "error": {"code": "runtime_error", "message": "Reporter \u5c1a\u672a\u914d\u5bf9"},
+            }
+        )
+
+    monkeypatch.setattr(installer.subprocess, "run", lambda *_args, **_kwargs: CompletedProcess())
+
+    assert self_check(reporter_binary) is True
+
+
+def test_install_command_requires_the_exact_manifest_version(monkeypatch, capsys, tmp_path, supported_probe):
+    expected = InstallResult("0.1.0", "/runtime", "/shim", False)
+    monkeypatch.setattr(__main__, "probe_environment", lambda: supported_probe)
+    monkeypatch.setattr(__main__, "install_preview", lambda *_args: expected)
+    monkeypatch.setattr(__main__, "default_reporter_home", lambda: tmp_path / "home")
+
+    assert __main__.main(["install", "--confirm-version", "0.1.1", "--json"]) == 2
+
+    assert json.loads(capsys.readouterr().out) == {
+        "schema_version": 1,
+        "error": "confirmation_version_mismatch",
+        "version": "0.1.0",
+    }
+
+
+def test_install_preview_and_confirmed_install_emit_result(monkeypatch, capsys, tmp_path, supported_probe):
+    preview = InstallResult("0.1.0", "/runtime", "/shim", False)
+    installed = InstallResult("0.1.0", "/runtime", "/shim", True)
+    monkeypatch.setattr(__main__, "probe_environment", lambda: supported_probe)
+    monkeypatch.setattr(__main__, "install_preview", lambda *_args: preview)
+    monkeypatch.setattr(__main__, "install_reporter", lambda *_args: installed)
+    monkeypatch.setattr(__main__, "default_reporter_home", lambda: tmp_path / "home")
+
+    assert __main__.main(["install-preview", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "schema_version": 1,
+        "install": {"version": "0.1.0", "runtime_dir": "/runtime", "shim_path": "/shim", "changed": False},
+    }
+
+    assert __main__.main(["install", "--confirm-version", "0.1.0", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == {
+        "schema_version": 1,
+        "install": {"version": "0.1.0", "runtime_dir": "/runtime", "shim_path": "/shim", "changed": True},
+    }
