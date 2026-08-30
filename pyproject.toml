@@ -3,5 +3,11 @@ name = "shopops-codex-marketplace"
 version = "0.1.0"
 requires-python = ">=3.12"
 
+[project.optional-dependencies]
+test = [
+  "PyYAML>=6.0",
+  "pytest>=9.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
