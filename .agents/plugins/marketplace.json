@@ -1,0 +1,20 @@
+{
+  "name": "shopops-internal",
+  "interface": {
+    "displayName": "ShopOps Internal"
+  },
+  "plugins": [
+    {
+      "name": "shopops-onboarding",
+      "source": {
+        "source": "local",
+        "path": "./plugins/shopops-onboarding"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
