@@ -95,7 +95,10 @@ def _read_python_version(candidate: str) -> tuple[str, tuple[int, int, int]] | N
             not isinstance(implementation, str)
             or not isinstance(raw_version, list)
             or len(raw_version) != 3
-            or not all(isinstance(part, int) for part in raw_version)
+            or not all(
+                isinstance(part, int) and not isinstance(part, bool) and part >= 0
+                for part in raw_version
+            )
         ):
             return None
     except (json.JSONDecodeError, KeyError, TypeError):
