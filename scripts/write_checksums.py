@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import shutil
 import sys
 from email.parser import BytesParser
 from pathlib import Path
@@ -53,21 +55,55 @@ def wheel_metadata(path: Path) -> tuple[str, str]:
     return name, version
 
 
+def _valid_entries(
+    manifest_path: Path,
+) -> list[dict[str, object]]:
+    if not manifest_path.exists():
+        raise LockUnavailable("no_committed_lock")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise LockValidationError("invalid_committed_lock") from error
+    if not isinstance(manifest, dict):
+        raise LockValidationError("invalid_manifest")
+    entries = manifest.get("wheelhouses")
+    if not isinstance(entries, list) or not entries:
+        raise LockValidationError("invalid_wheelhouses")
+    if not all(isinstance(entry, dict) for entry in entries):
+        raise LockValidationError("invalid_wheelhouse_entry")
+    for entry in entries:
+        if not all(isinstance(entry.get(key), str) for key in ("platform", "python", "reporter_version")):
+            raise LockValidationError("invalid_wheelhouse_entry")
+        if not isinstance(entry.get("files"), list):
+            raise LockValidationError("invalid_wheelhouse_entry")
+    return entries
+
+
 def _matching_entry(
-    manifest: dict[str, object], platform: str, abi: str, reporter_version: str
+    entries: list[dict[str, object]], platform: str, abi: str, reporter_version: str
 ) -> dict[str, object]:
-    entries = [
-        entry
-        for entry in manifest.get("wheelhouses", [])
-        if entry.get("platform") == platform
-        and entry.get("python") == abi.removeprefix("cp")
-        and entry.get("reporter_version") == reporter_version
-    ]
-    if not entries:
+    seen = set()
+    for entry in entries:
+        key = (entry["platform"], entry["python"], entry["reporter_version"])
+        if key in seen:
+            raise LockValidationError(f"duplicate_lock_entries:{key[0]}:{key[1]}:{key[2]}")
+        seen.add(key)
+
+    current_version_entries = [entry for entry in entries if entry["reporter_version"] == reporter_version]
+    if not current_version_entries:
         raise LockUnavailable(f"no_same_version_lock:{platform}:{abi}:{reporter_version}")
-    if len(entries) != 1:
-        raise LockValidationError(f"duplicate_lock_entries:{platform}:{abi}:{reporter_version}")
-    return entries[0]
+    platform_entries = [entry for entry in current_version_entries if entry["platform"] == platform]
+    for required_abi in ("cp311", "cp312"):
+        required_python = required_abi.removeprefix("cp")
+        if not any(entry["python"] == required_python for entry in platform_entries):
+            raise LockValidationError(
+                f"missing_required_abi:{platform}:{required_abi}:{reporter_version}"
+            )
+
+    matches = [entry for entry in platform_entries if entry["python"] == abi.removeprefix("cp")]
+    if len(matches) != 1:
+        raise LockValidationError(f"invalid_required_abi:{platform}:{abi}:{reporter_version}")
+    return matches[0]
 
 
 def validate_locked_wheelhouse(
@@ -80,15 +116,15 @@ def validate_locked_wheelhouse(
     """Validate an exact staged/live wheel set against the committed same-version lock."""
     manifest_path = plugin_root / "reporter-manifest.json"
     checksums_path = plugin_root / "checksums.json"
-    if not manifest_path.exists():
-        raise LockUnavailable("no_committed_lock")
+    entries = _valid_entries(manifest_path)
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         checksums = json.loads(checksums_path.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError) as error:
         raise LockValidationError("invalid_committed_lock") from error
+    if not isinstance(checksums, dict):
+        raise LockValidationError("invalid_checksum_inventory")
 
-    entry = _matching_entry(manifest, platform, abi, reporter_version)
+    entry = _matching_entry(entries, platform, abi, reporter_version)
     expected = entry.get("files")
     if not isinstance(expected, list):
         raise LockValidationError("invalid_manifest_files")
@@ -103,6 +139,18 @@ def validate_locked_wheelhouse(
     if [path.name for path in actual] != expected_names:
         raise LockValidationError("filename_mismatch")
 
+    expected_paths = {
+        f"wheelhouse/{platform}/{abi}/{item['name']}"
+        for item in expected
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    prefix = f"wheelhouse/{platform}/{abi}/"
+    inventory_paths = {key for key in checksums if key.startswith(prefix)}
+    if inventory_paths - expected_paths:
+        raise LockValidationError(f"checksum_inventory_extra:{platform}:{abi}")
+    if expected_paths - inventory_paths:
+        raise LockValidationError(f"checksum_inventory_missing:{platform}:{abi}")
+
     for item, path in zip(expected, actual, strict=True):
         expected_digest = item.get("sha256")
         relative = f"wheelhouse/{platform}/{abi}/{path.name}"
@@ -111,6 +159,55 @@ def validate_locked_wheelhouse(
         if sha256(path) != expected_digest:
             raise LockValidationError(f"checksum_mismatch:{path.name}")
     return actual
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
+
+
+def promote_release(
+    plugin_root: Path,
+    staged_platform_root: Path,
+    staged_manifest: Path,
+    staged_checksums: Path,
+    backup_root: Path,
+    replace=os.replace,
+) -> None:
+    """Replace wheelhouse and metadata together, restoring prior bytes on any failure."""
+    live_platform_root = plugin_root / "wheelhouse" / "macos-arm64"
+    live_manifest = plugin_root / "reporter-manifest.json"
+    live_checksums = plugin_root / "checksums.json"
+    live_platform_root.parent.mkdir(parents=True, exist_ok=True)
+    backup_root.mkdir(parents=True, exist_ok=True)
+    targets = (
+        (staged_platform_root, live_platform_root, backup_root / "macos-arm64"),
+        (staged_manifest, live_manifest, backup_root / "reporter-manifest.json"),
+        (staged_checksums, live_checksums, backup_root / "checksums.json"),
+    )
+    records: list[tuple[Path, Path, bool, bool]] = []
+    try:
+        for staged, live, backup in targets:
+            had_previous = live.exists()
+            moved_previous = False
+            moved_staged = False
+            records.append((live, backup, moved_previous, moved_staged))
+            if had_previous:
+                replace(live, backup)
+                moved_previous = True
+                records[-1] = (live, backup, moved_previous, moved_staged)
+            replace(staged, live)
+            moved_staged = True
+            records[-1] = (live, backup, moved_previous, moved_staged)
+    except Exception:
+        for live, backup, moved_previous, moved_staged in reversed(records):
+            if moved_staged:
+                _remove_path(live)
+            if moved_previous:
+                replace(backup, live)
+        raise
 
 
 def locked_requirements(
@@ -170,7 +267,9 @@ def write_manifests(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--action", choices=("write", "locked-requirements", "validate"), default="write")
+    parser.add_argument(
+        "--action", choices=("write", "locked-requirements", "validate", "promote"), default="write"
+    )
     parser.add_argument("--plugin-root", type=Path, required=True)
     parser.add_argument("--reporter-version", required=True)
     parser.add_argument("--platform", default="macos-arm64")
@@ -179,6 +278,10 @@ def main() -> int:
     parser.add_argument("--wheelhouse-root", type=Path)
     parser.add_argument("--manifest-output", type=Path)
     parser.add_argument("--checksums-output", type=Path)
+    parser.add_argument("--staged-platform-root", type=Path)
+    parser.add_argument("--staged-manifest", type=Path)
+    parser.add_argument("--staged-checksums", type=Path)
+    parser.add_argument("--backup-root", type=Path)
     args = parser.parse_args()
 
     try:
@@ -189,6 +292,23 @@ def main() -> int:
                 args.wheelhouse_root,
                 args.manifest_output,
                 args.checksums_output,
+            )
+        elif args.action == "promote":
+            if not all(
+                (
+                    args.staged_platform_root,
+                    args.staged_manifest,
+                    args.staged_checksums,
+                    args.backup_root,
+                )
+            ):
+                parser.error("promotion requires staged paths and --backup-root")
+            promote_release(
+                args.plugin_root,
+                args.staged_platform_root,
+                args.staged_manifest,
+                args.staged_checksums,
+                args.backup_root,
             )
         else:
             if not args.abi:

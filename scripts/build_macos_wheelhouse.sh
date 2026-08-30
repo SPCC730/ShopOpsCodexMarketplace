@@ -8,7 +8,6 @@ REPORTER_DIR="$SHOPOPS_REPO/reporter"
 PLUGIN_ROOT="$ROOT_DIR/plugins/shopops-onboarding"
 PYTHON_BIN=${PYTHON_BIN:-python3.12}
 WRITER="$ROOT_DIR/scripts/write_checksums.py"
-LIVE_PLATFORM_ROOT="$PLUGIN_ROOT/wheelhouse/macos-arm64"
 
 if [[ ! -f "$REPORTER_DIR/pyproject.toml" ]]; then
   echo "Reporter project not found at $REPORTER_DIR" >&2
@@ -19,7 +18,8 @@ if ! "$PYTHON_BIN" -c 'import sys; assert sys.version_info >= (3, 11)' >/dev/nul
   exit 1
 fi
 
-build_dir=$(mktemp -d "${TMPDIR:-/tmp}/shopops-wheelhouse.XXXXXX")
+mkdir -p "$PLUGIN_ROOT/wheelhouse"
+build_dir=$(mktemp -d "$PLUGIN_ROOT/.wheelhouse-release.XXXXXX")
 trap 'rm -rf "$build_dir"' EXIT
 staged_wheelhouse="$build_dir/wheelhouse"
 staged_platform_root="$staged_wheelhouse/macos-arm64"
@@ -108,16 +108,11 @@ done
   --manifest-output "$staged_manifest" \
   --checksums-output "$staged_checksums"
 
-backup_platform_root="$build_dir/previous-macos-arm64"
-if [[ -d "$LIVE_PLATFORM_ROOT" ]]; then
-  mv "$LIVE_PLATFORM_ROOT" "$backup_platform_root"
-fi
-if ! mv "$staged_platform_root" "$LIVE_PLATFORM_ROOT"; then
-  if [[ -d "$backup_platform_root" ]]; then
-    mv "$backup_platform_root" "$LIVE_PLATFORM_ROOT"
-  fi
-  echo "Wheelhouse promotion failed; previous payload was restored." >&2
-  exit 1
-fi
-mv "$staged_manifest" "$PLUGIN_ROOT/reporter-manifest.json"
-mv "$staged_checksums" "$PLUGIN_ROOT/checksums.json"
+"$PYTHON_BIN" "$WRITER" \
+  --action promote \
+  --plugin-root "$PLUGIN_ROOT" \
+  --reporter-version "$reporter_version" \
+  --staged-platform-root "$staged_platform_root" \
+  --staged-manifest "$staged_manifest" \
+  --staged-checksums "$staged_checksums" \
+  --backup-root "$build_dir/backup"

@@ -1,7 +1,9 @@
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
 from zipfile import ZipFile
 
 import pytest
@@ -96,6 +98,38 @@ def file_bytes(directory: Path) -> dict[str, bytes]:
     return {path.name: path.read_bytes() for path in sorted(directory.iterdir())}
 
 
+def release_stage(plugin_root: Path, tmp_path: Path) -> tuple[Path, Path, Path, Path]:
+    release_root = tmp_path / "release"
+    staged_platform = release_root / "macos-arm64"
+    shutil.copytree(plugin_root / "wheelhouse" / "macos-arm64", staged_platform)
+    staged_manifest = release_root / "reporter-manifest.json"
+    staged_checksums = release_root / "checksums.json"
+    shutil.copy2(plugin_root / "reporter-manifest.json", staged_manifest)
+    shutil.copy2(plugin_root / "checksums.json", staged_checksums)
+    return release_root, staged_platform, staged_manifest, staged_checksums
+
+
+def plugin_snapshot(plugin_root: Path) -> dict[str, bytes]:
+    paths = [
+        plugin_root / "wheelhouse" / "macos-arm64",
+        plugin_root / "reporter-manifest.json",
+        plugin_root / "checksums.json",
+    ]
+    snapshot = {}
+    for path in paths:
+        if path.is_dir():
+            snapshot.update(
+                {
+                    str(child.relative_to(plugin_root)): child.read_bytes()
+                    for child in path.rglob("*")
+                    if child.is_file()
+                }
+            )
+        elif path.is_file():
+            snapshot[str(path.relative_to(plugin_root))] = path.read_bytes()
+    return snapshot
+
+
 def test_same_version_lock_rejects_a_tampered_committed_wheel(tmp_path):
     """Catch a live payload whose bytes no longer match its committed manifest hash."""
     plugin_root = fake_plugin_root(tmp_path)
@@ -159,6 +193,138 @@ def test_new_reporter_version_has_no_same_version_lock(tmp_path):
 
     with pytest.raises(wheelhouse_writer.LockUnavailable):
         wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.2.0")
+
+
+@pytest.mark.parametrize("manifest", [{}, {"wheelhouses": []}])
+def test_invalid_or_empty_manifest_never_bootstraps_an_unlocked_rebuild(tmp_path, manifest):
+    """Catch syntactically valid but unusable locks before network resolution."""
+    plugin_root = fake_plugin_root(tmp_path)
+    (plugin_root / "reporter-manifest.json").write_text(json.dumps(manifest))
+
+    with pytest.raises(wheelhouse_writer.LockValidationError):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_current_version_missing_an_abi_never_bootstraps_an_unlocked_rebuild(tmp_path):
+    """Catch a partial current-version matrix even when the requested ABI looks valid."""
+    plugin_root = fake_plugin_root(tmp_path)
+    manifest_path = plugin_root / "reporter-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["wheelhouses"] = [entry for entry in manifest["wheelhouses"] if entry["python"] == "311"]
+    manifest_path.write_text(json.dumps(manifest))
+
+    with pytest.raises(wheelhouse_writer.LockValidationError, match="missing_required_abi"):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_different_reporter_version_manifest_may_bootstrap_a_new_lock(tmp_path):
+    """Allow a genuine version bump rather than failing on a valid previous release."""
+    plugin_root = fake_plugin_root(tmp_path)
+    manifest_path = plugin_root / "reporter-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    for entry in manifest["wheelhouses"]:
+        entry["reporter_version"] = "0.2.0"
+    manifest_path.write_text(json.dumps(manifest))
+
+    with pytest.raises(wheelhouse_writer.LockUnavailable):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_absent_manifest_may_bootstrap_a_new_lock(tmp_path):
+    """Allow first release construction when no committed lock exists at all."""
+    plugin_root = fake_plugin_root(tmp_path)
+    (plugin_root / "reporter-manifest.json").unlink()
+
+    with pytest.raises(wheelhouse_writer.LockUnavailable):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_clean_bootstrap_without_manifest_or_checksums_may_create_a_new_lock(tmp_path):
+    """Allow a first build before either committed metadata file exists."""
+    plugin_root = fake_plugin_root(tmp_path)
+    (plugin_root / "reporter-manifest.json").unlink()
+    (plugin_root / "checksums.json").unlink()
+
+    with pytest.raises(wheelhouse_writer.LockUnavailable):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_duplicate_current_version_entries_never_bootstrap_an_unlocked_rebuild(tmp_path):
+    """Catch ambiguous same-version locks before a resolver can choose one arbitrarily."""
+    plugin_root = fake_plugin_root(tmp_path)
+    manifest_path = plugin_root / "reporter-manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["wheelhouses"].append(manifest["wheelhouses"][0])
+    manifest_path.write_text(json.dumps(manifest))
+
+    with pytest.raises(wheelhouse_writer.LockValidationError, match="duplicate_lock_entries"):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_same_version_lock_rejects_an_extra_checksum_for_its_abi_prefix(tmp_path):
+    """Catch a checksum inventory that names an artifact absent from the signed file list."""
+    plugin_root = fake_plugin_root(tmp_path)
+    checksums_path = plugin_root / "checksums.json"
+    checksums = json.loads(checksums_path.read_text())
+    checksums["wheelhouse/macos-arm64/cp311/unexpected-1.0-py3-none-any.whl"] = "1" * 64
+    checksums_path.write_text(json.dumps(checksums))
+
+    with pytest.raises(wheelhouse_writer.LockValidationError, match="checksum_inventory_extra"):
+        wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_same_version_lock_preserves_other_platform_checksum_inventory(tmp_path):
+    """Keep future platform entries out of the macOS ABI-specific inventory check."""
+    plugin_root = fake_plugin_root(tmp_path)
+    checksums_path = plugin_root / "checksums.json"
+    checksums = json.loads(checksums_path.read_text())
+    checksums["wheelhouse/windows-x64/cp311/future-1.0-py3-none-any.whl"] = "2" * 64
+    checksums_path.write_text(json.dumps(checksums))
+
+    assert wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
+
+
+def test_promotion_creates_clean_bootstrap_parents(tmp_path):
+    """Catch a clean install path that assumes wheelhouse parents already exist."""
+    source_root = fake_plugin_root(tmp_path / "source")
+    plugin_root = tmp_path / "bootstrap" / "plugin"
+    release_root, staged_platform, staged_manifest, staged_checksums = release_stage(source_root, tmp_path / "stage")
+
+    wheelhouse_writer.promote_release(
+        plugin_root, staged_platform, staged_manifest, staged_checksums, release_root / "backup"
+    )
+
+    assert (plugin_root / "wheelhouse" / "macos-arm64" / "cp311").is_dir()
+    assert (plugin_root / "reporter-manifest.json").is_file()
+    assert (plugin_root / "checksums.json").is_file()
+
+
+@pytest.mark.parametrize("failure_call", range(1, 7))
+def test_promotion_rolls_back_every_replacement_failure(tmp_path, failure_call):
+    """Catch any partial replacement that leaves wheelhouse or metadata mixed across releases."""
+    plugin_root = fake_plugin_root(tmp_path / "plugin")
+    release_root, staged_platform, staged_manifest, staged_checksums = release_stage(plugin_root, tmp_path / "stage")
+    before = plugin_snapshot(plugin_root)
+    calls = 0
+
+    def fail_once(source: str | Path, destination: str | Path) -> None:
+        nonlocal calls
+        calls += 1
+        if calls == failure_call:
+            raise OSError(f"injected replacement failure {failure_call}")
+        os.replace(source, destination)
+
+    with pytest.raises(OSError, match="injected replacement failure"):
+        wheelhouse_writer.promote_release(
+            plugin_root,
+            staged_platform,
+            staged_manifest,
+            staged_checksums,
+            release_root / "backup",
+            replace=fail_once,
+        )
+
+    assert plugin_snapshot(plugin_root) == before
 
 
 @pytest.mark.parametrize("abi", ["cp311", "cp312"])
