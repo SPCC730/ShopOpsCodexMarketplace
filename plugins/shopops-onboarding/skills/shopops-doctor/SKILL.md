@@ -17,12 +17,20 @@ state. Do not inspect, scan, connect, or execute a business project.
 3. Inspect only the previewed Reporter home paths: the stable
    `<reporter-home>/bin/shopops-report` shim and its target, plus the target
    runtime's `venv/bin/shopops-report`. Do not inspect projects or any other
-   user directories. Run the stable shim with `--json status` only when both
-   files are present and executable.
-4. Report exactly one state:
-   - `not_installed`: no stable shim or no Reporter runtime is present.
-   - `repair_required`: a shim target is malformed, missing, non-executable, or
-     inconsistent with its runtime; the checksum preview or status JSON is invalid.
+   user directories. Validate the shim before any status command: it must have
+   the exact canonical content `#!/bin/sh` followed by
+   `exec <expected-runtime-binary> "$@"`, where the expected binary is
+   `<reporter-home>/runtime/<active-version>/venv/bin/shopops-report`. Resolve
+   that target, ensure it is an executable regular file under
+   `<reporter-home>/runtime/`, and reject symlink escapes or any other target.
+   Run the validated runtime binary directly with `--json status`; never execute
+   the shim during diagnosis.
+4. Apply these states in order and report exactly one:
+   - `not_installed`: only when both the stable shim and every Reporter runtime
+     are absent.
+   - `repair_required`: any partial, malformed, missing-target, or
+     non-executable shim/runtime artifact; a target outside the expected runtime;
+     or an invalid checksum preview or status JSON.
    - `upgrade_available`: the shim and its current runtime are healthy, but their
      installed version differs from the checksum-locked preview version.
    - `not_paired`: the current runtime and shim are healthy and status reports
