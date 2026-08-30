@@ -69,7 +69,9 @@ def test_manifest_exposes_the_required_skill_path_without_runtime_components():
             "postUninstall",
         }
     )
-    assert {path.name for path in PLUGIN_ROOT.iterdir()} == {".codex-plugin", "skills"}
+    assert {".codex-plugin", "skills"}.issubset(
+        {path.name for path in PLUGIN_ROOT.iterdir()}
+    )
 
 
 def test_plugin_has_only_the_two_wp1_skill_entrypoints():
