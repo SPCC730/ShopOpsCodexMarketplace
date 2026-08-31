@@ -109,7 +109,7 @@ def install_reporter(
         if layout.windows:
             _relocate_console_script(staged_binary, layout)
         if not self_check(staged_binary, locked.version):
-            raise InstallError("self_check_failed")
+            raise InstallError("staged_self_check_failed")
 
         if runtime_dir.exists():
             backup_dir = Path(tempfile.mkdtemp(prefix=f".{locked.version}.backup.", dir=runtime_root))
@@ -119,7 +119,7 @@ def install_reporter(
         installed_runtime = True
         _relocate_console_script(reporter_binary, layout)
         if not self_check(reporter_binary, locked.version):
-            raise InstallError("self_check_failed")
+            raise InstallError("final_self_check_failed")
         _ensure_shim(shim_path, reporter_binary, layout)
     except Exception:
         if installed_runtime:
