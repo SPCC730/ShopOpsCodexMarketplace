@@ -48,8 +48,10 @@ def test_probe_skips_incompatible_interpreter_and_uses_next_candidate(monkeypatc
 
     responses = iter(
         [
-            '{"implementation": "cpython", "version_info": [3, 10, 14]}',
-            '{"implementation": "cpython", "version_info": [3, 11, 9]}',
+            '{"implementation": "cpython", "version_info": [3, 10, 14], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64"}',
+            '{"implementation": "cpython", "version_info": [3, 11, 9], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64"}',
         ]
     )
 
@@ -68,7 +70,40 @@ def test_probe_skips_incompatible_interpreter_and_uses_next_candidate(monkeypatc
     assert probe.supported is True
     assert probe.python_executable == "python-supported"
     assert probe.python_version == "3.11.9"
+    assert probe.python_architecture == "arm64"
+    assert probe.python_platform == "macosx-15.0-arm64"
     assert probe.reason is None
+
+
+def test_probe_skips_rosetta_python_and_selects_later_native_arm64_candidate(monkeypatch):
+    monkeypatch.setattr(platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(platform, "machine", lambda: "arm64")
+    responses = iter(
+        [
+            '{"implementation": "cpython", "version_info": [3, 12, 8], '
+            '"python_architecture": "x86_64", "python_platform": "macosx-15.0-x86_64"}',
+            '{"implementation": "cpython", "version_info": [3, 11, 9], '
+            '"python_architecture": "arm64", "python_platform": "macosx-14.0-arm64"}',
+        ]
+    )
+
+    class CompletedProcess:
+        returncode = 0
+
+        def __init__(self, stdout):
+            self.stdout = stdout
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(next(responses)),
+    )
+
+    probe = probe_environment(candidates=["rosetta-python", "native-python"])
+
+    assert probe.supported is True
+    assert probe.python_executable == "native-python"
+    assert probe.python_architecture == "arm64"
+    assert probe.python_platform == "macosx-14.0-arm64"
 
 
 def test_probe_reports_unsupported_python_when_no_candidate_is_compatible(monkeypatch):
@@ -77,7 +112,10 @@ def test_probe_reports_unsupported_python_when_no_candidate_is_compatible(monkey
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
 
     class CompletedProcess:
-        stdout = '{"implementation": "pypy", "version_info": [3, 12, 2]}'
+        stdout = (
+            '{"implementation": "pypy", "version_info": [3, 12, 2], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64"}'
+        )
         returncode = 0
 
     monkeypatch.setattr(
@@ -99,7 +137,10 @@ def test_probe_ignores_a_failed_interpreter_process(monkeypatch):
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
 
     class CompletedProcess:
-        stdout = '{"implementation": "cpython", "version_info": [3, 12, 8]}'
+        stdout = (
+            '{"implementation": "cpython", "version_info": [3, 12, 8], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64"}'
+        )
         returncode = 1
 
     monkeypatch.setattr(
@@ -123,7 +164,10 @@ def test_probe_rejects_invalid_version_components(monkeypatch, version_info):
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
 
     class CompletedProcess:
-        stdout = f'{{"implementation": "cpython", "version_info": {version_info}}}'
+        stdout = (
+            f'{{"implementation": "cpython", "version_info": {version_info}, '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64"}'
+        )
         returncode = 0
 
     monkeypatch.setattr(
@@ -139,6 +183,36 @@ def test_probe_rejects_invalid_version_components(monkeypatch, version_info):
     assert probe.python_version is None
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        '{"implementation": "cpython", "version_info": [3, 12, 8], '
+        '"python_platform": "macosx-15.0-arm64"}',
+        '{"implementation": "cpython", "version_info": [3, 12, 8], '
+        '"python_architecture": true, "python_platform": "macosx-15.0-arm64"}',
+        '{"implementation": "cpython", "version_info": [3, 12, 8], '
+        '"python_architecture": "arm64", "python_platform": ["macosx-15.0-arm64"]}',
+    ],
+)
+def test_probe_rejects_malformed_architecture_payload(monkeypatch, payload):
+    monkeypatch.setattr(platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(platform, "machine", lambda: "arm64")
+
+    class CompletedProcess:
+        returncode = 0
+        stdout = payload
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(),
+    )
+
+    probe = probe_environment(candidates=["malformed-python"])
+
+    assert probe.supported is False
+    assert probe.reason == "unsupported_python"
+
+
 def test_probe_json_emits_only_a_versioned_machine_readable_envelope(monkeypatch, capsys):
     """The CLI provides a stable JSON-only result for installer automation."""
     monkeypatch.setattr(
@@ -149,6 +223,8 @@ def test_probe_json_emits_only_a_versioned_machine_readable_envelope(monkeypatch
             architecture="arm64",
             python_executable="/usr/local/bin/python3.12",
             python_version="3.12.8",
+            python_architecture="arm64",
+            python_platform="macosx-15.0-arm64",
             supported=True,
             reason=None,
         ),
@@ -163,6 +239,8 @@ def test_probe_json_emits_only_a_versioned_machine_readable_envelope(monkeypatch
             "architecture": "arm64",
             "python_executable": "/usr/local/bin/python3.12",
             "python_version": "3.12.8",
+            "python_architecture": "arm64",
+            "python_platform": "macosx-15.0-arm64",
             "supported": True,
             "reason": None,
         },
@@ -179,6 +257,8 @@ def test_probe_json_reports_unsupported_environment_with_nonzero_exit(monkeypatc
             architecture="x86_64",
             python_executable=None,
             python_version=None,
+            python_architecture=None,
+            python_platform=None,
             supported=False,
             reason="unsupported_platform",
         ),
@@ -193,6 +273,8 @@ def test_probe_json_reports_unsupported_environment_with_nonzero_exit(monkeypatc
             "architecture": "x86_64",
             "python_executable": None,
             "python_version": None,
+            "python_architecture": None,
+            "python_platform": None,
             "supported": False,
             "reason": "unsupported_platform",
         },

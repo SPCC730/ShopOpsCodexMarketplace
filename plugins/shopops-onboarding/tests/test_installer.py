@@ -27,6 +27,8 @@ def supported_probe() -> EnvironmentProbe:
         architecture="arm64",
         python_executable=sys.executable,
         python_version="3.12.0",
+        python_architecture="arm64",
+        python_platform="macosx-15.0-arm64",
         supported=True,
         reason=None,
     )
@@ -36,13 +38,16 @@ def write_fake_wheel(path: Path, version: str) -> None:
     """Create a tiny offline wheel with the real Reporter console-script name."""
     dist_info = f"shopops_reporter-{version}.dist-info"
     with ZipFile(path, "w", ZIP_DEFLATED) as wheel:
-        wheel.writestr("shopops_reporter/__init__.py", "")
+        wheel.writestr("shopops_reporter/__init__.py", f"__version__ = '{version}'\n")
         wheel.writestr("shopops_reporter/__main__.py", "from .cli import main\nraise SystemExit(main())\n")
         wheel.writestr(
             "shopops_reporter/cli.py",
             "import json\n"
+            "from . import __version__\n"
             "def main():\n"
-            "    print(json.dumps({'action': 'status', 'state': 'not_paired'}))\n"
+            "    print(json.dumps({'schema': 'shopops.reporter.cli.v1', "
+            "'reporter_version': __version__, 'ok': False, 'action': 'status', "
+            "'error': {'code': 'not_paired', 'message': 'not paired'}}))\n"
             "    return 2\n",
         )
         wheel.writestr(
@@ -116,7 +121,7 @@ def test_install_rejects_a_tampered_wheel(tmp_path, supported_probe):
 
 def test_failed_self_check_keeps_previous_shim(tmp_path, supported_probe, monkeypatch):
     old = install_fake_version(tmp_path, "0.0.9")
-    monkeypatch.setattr(installer, "self_check", lambda _python: False)
+    monkeypatch.setattr(installer, "self_check", lambda _python, _version: False)
     with pytest.raises(InstallError, match="self_check_failed"):
         install_reporter(fake_plugin_root(tmp_path), tmp_path / "home", supported_probe)
     assert read_current_target(tmp_path / "home") == old
@@ -159,7 +164,7 @@ def test_install_is_idempotent_after_a_healthy_versioned_runtime(tmp_path, suppo
     assert stat.S_IMODE((tmp_path / "home" / "bin" / "shopops-report").stat().st_mode) == 0o700
 
 
-def test_self_check_accepts_the_locked_reporters_legacy_unpaired_status(tmp_path, monkeypatch):
+def test_self_check_rejects_legacy_text_based_unpaired_status(tmp_path, monkeypatch):
     reporter_binary = tmp_path / "home" / "runtime" / "0.1.0" / "venv" / "bin" / "shopops-report"
     reporter_binary.parent.mkdir(parents=True)
     reporter_binary.touch()
@@ -175,7 +180,93 @@ def test_self_check_accepts_the_locked_reporters_legacy_unpaired_status(tmp_path
 
     monkeypatch.setattr(installer.subprocess, "run", lambda *_args, **_kwargs: CompletedProcess())
 
-    assert self_check(reporter_binary) is True
+    assert self_check(reporter_binary, "0.1.0") is False
+
+
+@pytest.mark.parametrize(
+    ("returncode", "payload", "expected"),
+    [
+        (
+            0,
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "0.1.0",
+                "ok": True,
+                "action": "status",
+                "data": {"daemon": {"running": False}},
+            },
+            True,
+        ),
+        (
+            2,
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "0.1.0",
+                "ok": False,
+                "action": "status",
+                "error": {"code": "not_paired", "message": "not paired"},
+            },
+            True,
+        ),
+        (
+            0,
+            {
+                "reporter_version": "0.1.0",
+                "ok": True,
+                "action": "status",
+                "data": {},
+            },
+            False,
+        ),
+        (
+            0,
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "9.9.9",
+                "ok": True,
+                "action": "status",
+                "data": {},
+            },
+            False,
+        ),
+        (
+            2,
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "0.1.0",
+                "ok": True,
+                "action": "status",
+                "error": {"code": "not_paired", "message": "not paired"},
+            },
+            False,
+        ),
+        (
+            2,
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "0.1.0",
+                "ok": False,
+                "action": "status",
+                "error": {"code": "runtime_error", "message": "not paired"},
+            },
+            False,
+        ),
+    ],
+)
+def test_self_check_requires_exact_reporter_protocol(
+    tmp_path, monkeypatch, returncode, payload, expected
+):
+    reporter_binary = tmp_path / "home/runtime/0.1.0/venv/bin/shopops-report"
+    reporter_binary.parent.mkdir(parents=True)
+    reporter_binary.touch()
+
+    class CompletedProcess:
+        stdout = json.dumps(payload)
+
+    CompletedProcess.returncode = returncode
+    monkeypatch.setattr(installer.subprocess, "run", lambda *_args, **_kwargs: CompletedProcess())
+
+    assert self_check(reporter_binary, "0.1.0") is expected
 
 
 def test_install_command_requires_the_exact_manifest_version(monkeypatch, capsys, tmp_path, supported_probe):
@@ -212,3 +303,33 @@ def test_install_preview_and_confirmed_install_emit_result(monkeypatch, capsys, 
         "schema_version": 1,
         "install": {"version": "0.1.0", "runtime_dir": "/runtime", "shim_path": "/shim", "changed": True},
     }
+
+
+@pytest.mark.parametrize("command", ["probe", "install-preview", "install"])
+def test_helper_normalizes_filesystem_failures_as_json(
+    monkeypatch, capsys, tmp_path, supported_probe, command
+):
+    preview = InstallResult("0.1.0", "/runtime", "/shim", False)
+    monkeypatch.setattr(__main__, "probe_environment", lambda: supported_probe)
+    monkeypatch.setattr(__main__, "default_reporter_home", lambda: tmp_path / "home")
+    monkeypatch.setattr(__main__, "install_preview", lambda *_args: preview)
+    argv = [command, "--json"]
+    if command == "probe":
+        monkeypatch.setattr(
+            __main__, "probe_environment", lambda: (_ for _ in ()).throw(PermissionError("denied"))
+        )
+    elif command == "install-preview":
+        monkeypatch.setattr(
+            __main__, "install_preview", lambda *_args: (_ for _ in ()).throw(PermissionError("denied"))
+        )
+    else:
+        argv = ["install", "--confirm-version", "0.1.0", "--json"]
+        monkeypatch.setattr(
+            __main__, "install_reporter", lambda *_args: (_ for _ in ()).throw(PermissionError("denied"))
+        )
+
+    assert __main__.main(argv) == 2
+
+    captured = capsys.readouterr()
+    assert json.loads(captured.out) == {"schema_version": 1, "error": "filesystem_error"}
+    assert captured.err == ""

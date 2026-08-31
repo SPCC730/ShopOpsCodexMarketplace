@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import tomllib
 
 import yaml
 
@@ -31,6 +32,7 @@ def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
 def test_manifest_exposes_the_required_skill_path_without_runtime_components():
     manifest = json.loads((PLUGIN_ROOT / ".codex-plugin/plugin.json").read_text())
     assert manifest["name"] == "shopops-onboarding"
+    assert manifest["version"] == "0.1.1"
     assert manifest["skills"] == "./skills/"
     assert set(manifest).isdisjoint(
         {
@@ -99,3 +101,12 @@ def test_wp1_skills_keep_the_required_authorization_and_retention_boundaries():
         assert "Removing this" in text
         assert "Codex plugin does not remove Reporter" in text
         assert "device identity, queued runs, and projects before confirmation" in text
+
+
+def test_root_pytest_collects_root_and_plugin_helper_suites():
+    configuration = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+
+    assert configuration["tool"]["pytest"]["ini_options"]["testpaths"] == [
+        "tests",
+        "plugins/shopops-onboarding/tests",
+    ]

@@ -15,10 +15,11 @@ import subprocess
 import tempfile
 from typing import Any
 
-from .environment import EnvironmentProbe
+from .environment import EnvironmentProbe, is_arm64_compatible
 
 
 _PLATFORM = "macos-arm64"
+_REPORTER_SCHEMA = "shopops.reporter.cli.v1"
 _VERSION = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]*$")
 
 
@@ -72,7 +73,7 @@ def install_reporter(
     reporter_binary = runtime_dir / "venv" / "bin" / "shopops-report"
     shim_path = reporter_home / "bin" / "shopops-report"
 
-    if reporter_binary.is_file() and self_check(reporter_binary):
+    if reporter_binary.is_file() and self_check(reporter_binary, locked.version):
         changed = _ensure_shim(shim_path, reporter_binary)
         return InstallResult(locked.version, str(runtime_dir), str(shim_path), changed)
 
@@ -85,7 +86,7 @@ def install_reporter(
         _create_venv(probe.python_executable, staging_venv)
         _install_offline(staging_venv / "bin" / "python", locked)
         staged_binary = staging_venv / "bin" / "shopops-report"
-        if not self_check(staged_binary):
+        if not self_check(staged_binary, locked.version):
             raise InstallError("self_check_failed")
 
         if runtime_dir.exists():
@@ -95,7 +96,7 @@ def install_reporter(
         os.replace(staging_dir, runtime_dir)
         installed_runtime = True
         _relocate_console_script(reporter_binary)
-        if not self_check(reporter_binary):
+        if not self_check(reporter_binary, locked.version):
             raise InstallError("self_check_failed")
         _ensure_shim(shim_path, reporter_binary)
     except Exception:
@@ -113,7 +114,7 @@ def install_reporter(
     return InstallResult(locked.version, str(runtime_dir), str(shim_path), True)
 
 
-def self_check(reporter_binary: Path) -> bool:
+def self_check(reporter_binary: Path, expected_version: str) -> bool:
     """Run the installed binary's JSON status command without requiring pairing."""
     if not reporter_binary.is_file():
         return False
@@ -129,25 +130,31 @@ def self_check(reporter_binary: Path) -> bool:
             timeout=15,
         )
         payload = json.loads(completed.stdout)
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, IndexError):
+    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, IndexError, TypeError):
         return False
 
-    if not isinstance(payload, dict) or payload.get("action") != "status":
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema") != _REPORTER_SCHEMA
+        or payload.get("reporter_version") != expected_version
+        or payload.get("action") != "status"
+        or not isinstance(payload.get("ok"), bool)
+    ):
         return False
     if completed.returncode == 0:
-        return True
-    error = payload.get("error")
-    error_code = error.get("code") if isinstance(error, dict) else payload.get("code")
-    error_message = error.get("message") if isinstance(error, dict) else payload.get("message")
-    return completed.returncode == 2 and (
-        payload.get("state") == "not_paired"
-        or error_code == "not_paired"
-        # Reporter 0.1.0 reports the same unpaired state as a runtime_error.
-        or (
-            error_code == "runtime_error"
-            and isinstance(error_message, str)
-            and "\u5c1a\u672a\u914d\u5bf9" in error_message
+        return (
+            payload["ok"] is True
+            and isinstance(payload.get("data"), dict)
+            and "error" not in payload
         )
+    error = payload.get("error")
+    return (
+        completed.returncode == 2
+        and payload["ok"] is False
+        and "data" not in payload
+        and isinstance(error, dict)
+        and error.get("code") == "not_paired"
+        and isinstance(error.get("message"), str)
     )
 
 
@@ -156,6 +163,12 @@ def _locked_wheelhouse(plugin_root: Path, probe: EnvironmentProbe) -> _LockedWhe
         raise InstallError(f"unsupported_environment:{probe.reason or 'unknown'}")
     if (probe.os_name, probe.architecture) != ("Darwin", "arm64"):
         raise InstallError("unsupported_environment:unsupported_platform")
+    if (
+        probe.python_architecture is None
+        or probe.python_platform is None
+        or not is_arm64_compatible(probe.python_architecture, probe.python_platform)
+    ):
+        raise InstallError("unsupported_environment:unsupported_python")
 
     abi = _abi_for(probe.python_version)
     try:

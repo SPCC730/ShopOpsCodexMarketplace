@@ -23,16 +23,24 @@ state. Do not inspect, scan, connect, or execute a business project.
    `<reporter-home>/runtime/<active-version>/venv/bin/shopops-report`. Resolve
    that target, ensure it is an executable regular file under
    `<reporter-home>/runtime/`, and reject symlink escapes or any other target.
+   Compare the installed runtime version in that contained target with the
+   checksum-locked preview version. If they differ, do not run its status command:
+   an older Reporter status is not guaranteed to be read-only. Report
+   `upgrade_available` and stop. Continue only for the exact locked version.
    Run the validated runtime binary directly with `--json status`; never execute
-   the shim during diagnosis.
+   the shim during diagnosis. Require schema `shopops.reporter.cli.v1`, the matching
+   `reporter_version`, action `status`, and consistent exit-code/`ok` semantics.
+   Accept only exit 0 with `ok: true` and a data object, or exit 2 with
+   `ok: false` and error code `not_paired`.
 4. Apply these states in order and report exactly one:
    - `not_installed`: only when both the stable shim and every Reporter runtime
      are absent.
    - `repair_required`: any partial, malformed, missing-target, or
      non-executable shim/runtime artifact; a target outside the expected runtime;
-     or an invalid checksum preview or status JSON.
+     or an invalid checksum preview or same-version status JSON.
    - `upgrade_available`: the shim and its current runtime are healthy, but their
-     installed version differs from the checksum-locked preview version.
+     installed version differs from the checksum-locked preview version; do not
+     invoke that older runtime's status command.
    - `not_paired`: the current runtime and shim are healthy and status reports
      the Reporter unpaired state.
    - `healthy`: the current runtime and shim are healthy, match the previewed

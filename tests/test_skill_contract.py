@@ -45,3 +45,14 @@ def test_doctor_state_precedence_reserves_not_installed_for_clean_absence():
     assert "`repair_required`: any partial, malformed, missing-target, or" in text
     state_rules = text[text.index("Apply these states in order") :]
     assert state_rules.index("`not_installed`") < state_rules.index("`repair_required`")
+
+
+def test_doctor_does_not_run_potentially_mutating_status_from_an_older_runtime():
+    text = doctor_skill_text()
+
+    version_check = "Compare the installed runtime version"
+    skip_status = "do not run its status command"
+    status = "Run the validated runtime binary directly"
+    assert version_check in text
+    assert skip_status in text
+    assert text.index(version_check) < text.index(skip_status) < text.index(status)
