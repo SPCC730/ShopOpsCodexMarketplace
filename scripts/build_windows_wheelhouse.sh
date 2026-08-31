@@ -22,7 +22,7 @@ mkdir -p "$PLUGIN_ROOT/wheelhouse"
 build_dir=$(mktemp -d "$PLUGIN_ROOT/.wheelhouse-release.XXXXXX")
 trap 'rm -rf "$build_dir"' EXIT
 staged_wheelhouse="$build_dir/wheelhouse"
-staged_platform_root="$staged_wheelhouse/macos-arm64"
+staged_platform_root="$staged_wheelhouse/windows-x64"
 staged_manifest="$build_dir/reporter-manifest.json"
 staged_checksums="$build_dir/checksums.json"
 
@@ -51,7 +51,7 @@ for abi in cp311 cp312; do
     --action locked-requirements \
     --plugin-root "$PLUGIN_ROOT" \
     --reporter-version "$reporter_version" \
-    --platform macos-arm64 \
+    --platform windows-x64 \
     --abi "$abi" >"$lock_file"
   lock_status=$?
   set -e
@@ -59,7 +59,7 @@ for abi in cp311 cp312; do
     0) locked=true ;;
     2) ;;
     *)
-      echo "Committed $abi lock validation failed; live payload was not modified." >&2
+      echo "Committed Windows $abi lock validation failed; live payload was not modified." >&2
       exit "$lock_status"
       ;;
   esac
@@ -70,21 +70,20 @@ for abi in cp311 cp312; do
       --no-deps \
       --require-hashes \
       --only-binary=:all: \
-      --platform macosx_11_0_arm64 \
+      --platform win_amd64 \
       --implementation cp \
       --python-version "${abi:2:1}.${abi:3}" \
       --abi "$abi" \
       --dest "$stage" \
       --requirement "$lock_file"
   else
-    requirements=("$reporter_wheel")
-    # pip's cross-target resolver does not evaluate these markers for 3.11.
+    requirements=("$reporter_wheel" "pywin32-ctypes>=0.2.0")
     if [[ "$abi" == "cp311" ]]; then
       requirements+=("importlib-metadata>=4.11.4" "backports.tarfile")
     fi
     "$PYTHON_BIN" -m pip download \
       --only-binary=:all: \
-      --platform macosx_11_0_arm64 \
+      --platform win_amd64 \
       --implementation cp \
       --python-version "${abi:2:1}.${abi:3}" \
       --abi "$abi" \
@@ -101,7 +100,7 @@ for abi in cp311 cp312; do
       --action validate \
       --plugin-root "$PLUGIN_ROOT" \
       --reporter-version "$reporter_version" \
-      --platform macos-arm64 \
+      --platform windows-x64 \
       --abi "$abi" \
       --candidate-directory "$stage"
   fi

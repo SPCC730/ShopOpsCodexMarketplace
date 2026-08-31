@@ -7,20 +7,29 @@ Act only after the developer explicitly invokes this skill. This is a read-only
 WP1 diagnostic: never install, repair, delete, enroll, pair, or change runtime
 state. Do not inspect, scan, connect, or execute a business project.
 
-1. From the installed plugin directory, run
-   `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. If the
-   environment is unsupported, report `repair_required` with the probe reason.
-2. Run
-   `PYTHONPATH=tools python3 -m shopops_plugin_helper install-preview --json`.
-   This verifies the selected macOS wheelhouse and its checksum inventory without
-   installation. If it fails, report `repair_required` and preserve the error.
-3. Inspect only the previewed Reporter home paths: the stable
-   `<reporter-home>/bin/shopops-report` shim and its target, plus the target
-   runtime's `venv/bin/shopops-report`. Do not inspect projects or any other
-   user directories. Validate the shim before any status command: it must have
-   the exact canonical content `#!/bin/sh` followed by
-   `exec <expected-runtime-binary> "$@"`, where the expected binary is
-   `<reporter-home>/runtime/<active-version>/venv/bin/shopops-report`. Resolve
+1. From the installed plugin directory, run the helper with an available Python
+   interpreter. On macOS use
+   `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. On Windows
+   PowerShell set `$env:PYTHONPATH = "tools"` and use `py -3.12 -m
+   shopops_plugin_helper probe --json`, or `py -3.11` when 3.12 is unavailable.
+   If the environment is unsupported, report `repair_required` with the probe
+   reason.
+2. Run `shopops_plugin_helper install-preview --json` with the same helper
+   interpreter and `PYTHONPATH`. This verifies the selected platform wheelhouse
+   and its checksum inventory without installation. If it fails, report
+   `repair_required` and preserve the error.
+3. Inspect only the previewed Reporter home paths. On macOS these are the stable
+   `<reporter-home>/bin/shopops-report` shim and the target runtime's
+   `venv/bin/shopops-report`. On Windows these are
+   `<reporter-home>\bin\shopops-report.cmd` and the target runtime's
+   `venv\Scripts\shopops-report.cmd`. Do not inspect projects or any other user
+   directories. Validate the shim before any status command and require exact canonical content
+   for the selected platform. The macOS shim must have the
+   canonical `#!/bin/sh` and `exec <expected-runtime-binary> "$@"`
+   content. The Windows shim must call only
+   `%~dp0..\runtime\<active-version>\venv\Scripts\shopops-report.cmd`, and that
+   runtime launcher must invoke only `%~dp0python.exe -m shopops_reporter %*`.
+   Resolve
    that target, ensure it is an executable regular file under
    `<reporter-home>/runtime/`, and reject symlink escapes or any other target.
    Compare the installed runtime version in that contained target with the

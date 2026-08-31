@@ -1,0 +1,60 @@
+name: Windows Reporter smoke test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows-reporter:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test tooling
+        run: python -m pip install packaging pytest
+      - name: Run test suite
+        run: >-
+          python -m pytest -q
+          tests/test_plugin_structure.py
+          tests/test_skill_contract.py
+          tests/test_wheelhouse.py
+          plugins/shopops-onboarding/tests/test_environment.py
+      - name: Install locked Reporter payload
+        shell: pwsh
+        run: |
+          $pluginRoot = Join-Path $PWD "plugins\shopops-onboarding"
+          $env:PYTHONPATH = Join-Path $pluginRoot "tools"
+          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP "local-app-data"
+          Push-Location $pluginRoot
+          $preview = python -m shopops_plugin_helper install-preview --json | ConvertFrom-Json
+          if (-not $preview.install.version) { throw "Missing Reporter preview version" }
+          python -m shopops_plugin_helper install --confirm-version $preview.install.version --json
+          $shim = Join-Path $env:LOCALAPPDATA "ShopOps\Reporter\bin\shopops-report.cmd"
+          & $shim --json status
+          if ($LASTEXITCODE -ne 2) { throw "Expected unpaired Reporter status" }
+
+          $parserCheck = @'
+          from shopops_reporter.cli import split_command
+          assert split_command('"C:\\Program Files\\Python311\\python.exe" task.py') == [r'C:\Program Files\Python311\python.exe', 'task.py']
+          '@
+          python -c $parserCheck
+
+          $reporterHome = Join-Path $env:LOCALAPPDATA "ShopOps\Reporter"
+          @{
+            server_url = "http://127.0.0.1:9"
+            device_id = "windows-smoke-device"
+            installation_id = "windows-smoke-installation"
+            display_name = "Windows smoke test"
+            declared_operator = $null
+            private_key_storage = "file"
+          } | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $reporterHome "device.json")
+          Set-Content -Encoding ascii (Join-Path $reporterHome "device.key") "smoke-test-key"
+          & $shim start
+          if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not start" }
+          $status = & $shim --json status | ConvertFrom-Json
+          if (-not $status.data.daemon.running) { throw "Reporter daemon is not running" }
+          & $shim stop
+          if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not stop" }
+          Pop-Location

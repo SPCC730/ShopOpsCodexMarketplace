@@ -35,6 +35,20 @@ def supported_probe() -> EnvironmentProbe:
     )
 
 
+@pytest.fixture
+def windows_probe() -> EnvironmentProbe:
+    return EnvironmentProbe(
+        os_name="Windows",
+        architecture="AMD64",
+        python_executable="C:\\Python311\\python.exe",
+        python_version="3.11.15",
+        python_architecture="AMD64",
+        python_platform="win-amd64",
+        supported=True,
+        reason=None,
+    )
+
+
 def write_fake_wheel(path: Path, version: str) -> None:
     """Create a tiny offline wheel with the real Reporter console-script name."""
     dist_info = f"shopops_reporter-{version}.dist-info"
@@ -67,21 +81,22 @@ def fake_wheelhouse(tmp_path: Path, *, tampered: bool = False, version: str = "0
     plugin_root = tmp_path / "plugin"
     entries = []
     checksums: dict[str, str] = {}
-    for abi in ("cp311", "cp312"):
-        wheel_dir = plugin_root / "wheelhouse" / "macos-arm64" / abi
-        wheel_dir.mkdir(parents=True)
-        wheel = wheel_dir / f"shopops_reporter-{version}-py3-none-any.whl"
-        write_fake_wheel(wheel, version)
-        digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
-        entries.append(
-            {
-                "platform": "macos-arm64",
-                "python": abi.removeprefix("cp"),
-                "reporter_version": version,
-                "files": [{"name": wheel.name, "sha256": digest}],
-            }
-        )
-        checksums[f"wheelhouse/macos-arm64/{abi}/{wheel.name}"] = digest
+    for platform_name in ("macos-arm64", "windows-x64"):
+        for abi in ("cp311", "cp312"):
+            wheel_dir = plugin_root / "wheelhouse" / platform_name / abi
+            wheel_dir.mkdir(parents=True)
+            wheel = wheel_dir / f"shopops_reporter-{version}-py3-none-any.whl"
+            write_fake_wheel(wheel, version)
+            digest = hashlib.sha256(wheel.read_bytes()).hexdigest()
+            entries.append(
+                {
+                    "platform": platform_name,
+                    "python": abi.removeprefix("cp"),
+                    "reporter_version": version,
+                    "files": [{"name": wheel.name, "sha256": digest}],
+                }
+            )
+            checksums[f"wheelhouse/{platform_name}/{abi}/{wheel.name}"] = digest
 
     manifest: dict[str, object] = {"wheelhouses": entries}
     (plugin_root / "reporter-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -165,6 +180,45 @@ def test_install_is_idempotent_after_a_healthy_versioned_runtime(tmp_path, suppo
     assert stat.S_IMODE((tmp_path / "home" / "bin" / "shopops-report").stat().st_mode) == 0o700
 
 
+def test_windows_preview_uses_cmd_shim_and_windows_wheelhouse(tmp_path, windows_probe):
+    plugin_root = fake_plugin_root(tmp_path)
+
+    preview = installer.install_preview(plugin_root, tmp_path / "home", windows_probe)
+
+    assert preview.version == "0.1.0"
+    assert preview.runtime_dir == str(tmp_path / "home" / "runtime" / "0.1.0")
+    assert preview.shim_path == str(tmp_path / "home" / "bin" / "shopops-report.cmd")
+
+
+def test_windows_install_writes_relative_runtime_launcher_and_stable_cmd_shim(
+    tmp_path, windows_probe, monkeypatch
+):
+    plugin_root = fake_plugin_root(tmp_path)
+    reporter_home = tmp_path / "Reporter Home"
+
+    def fake_create_venv(_python_executable, venv):
+        scripts = venv / "Scripts"
+        scripts.mkdir(parents=True)
+        (scripts / "python.exe").touch()
+
+    monkeypatch.setattr(installer, "_create_venv", fake_create_venv)
+    monkeypatch.setattr(installer, "_install_offline", lambda *_args: None)
+    monkeypatch.setattr(installer, "self_check", lambda binary, _version: binary.is_file())
+
+    result = install_reporter(plugin_root, reporter_home, windows_probe)
+
+    runtime_launcher = reporter_home / "runtime/0.1.0/venv/Scripts/shopops-report.cmd"
+    stable_shim = reporter_home / "bin/shopops-report.cmd"
+    assert result.shim_path == str(stable_shim)
+    assert runtime_launcher.read_text(encoding="utf-8") == (
+        "@echo off\n\"%~dp0python.exe\" -m shopops_reporter %*\nexit /b %ERRORLEVEL%\n"
+    )
+    assert stable_shim.read_text(encoding="utf-8") == (
+        '@echo off\ncall "%~dp0..\\runtime\\0.1.0\\venv\\Scripts\\shopops-report.cmd" %*\n'
+        "exit /b %ERRORLEVEL%\n"
+    )
+
+
 def test_self_check_rejects_legacy_text_based_unpaired_status(tmp_path, monkeypatch):
     reporter_binary = tmp_path / "home" / "runtime" / "0.1.0" / "venv" / "bin" / "shopops-report"
     reporter_binary.parent.mkdir(parents=True)
@@ -182,6 +236,43 @@ def test_self_check_rejects_legacy_text_based_unpaired_status(tmp_path, monkeypa
     monkeypatch.setattr(installer.subprocess, "run", lambda *_args, **_kwargs: CompletedProcess())
 
     assert self_check(reporter_binary, "0.1.0") is False
+
+
+def test_windows_self_check_invokes_cmd_through_command_processor(tmp_path, monkeypatch):
+    reporter_binary = tmp_path / "home/runtime/0.1.0/venv/Scripts/shopops-report.cmd"
+    reporter_binary.parent.mkdir(parents=True)
+    reporter_binary.touch()
+    captured_command = None
+
+    class CompletedProcess:
+        returncode = 2
+        stdout = json.dumps(
+            {
+                "schema": "shopops.reporter.cli.v1",
+                "reporter_version": "0.1.0",
+                "ok": False,
+                "action": "status",
+                "error": {"code": "not_paired", "message": "not paired"},
+            }
+        )
+
+    def run(command, **_kwargs):
+        nonlocal captured_command
+        captured_command = command
+        return CompletedProcess()
+
+    monkeypatch.setenv("COMSPEC", r"C:\Windows\System32\cmd.exe")
+    monkeypatch.setattr(installer.subprocess, "run", run)
+
+    assert self_check(reporter_binary, "0.1.0") is True
+    assert captured_command == [
+        r"C:\Windows\System32\cmd.exe",
+        "/d",
+        "/c",
+        str(reporter_binary),
+        "--json",
+        "status",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -335,7 +426,7 @@ def test_install_preview_cli_supports_system_python39():
     assert completed.returncode == 0, completed.stdout + completed.stderr
     payload = json.loads(completed.stdout)
     assert payload["schema_version"] == 1
-    assert payload["install"]["version"] == "0.1.2"
+    assert payload["install"]["version"] == "0.1.3"
 
 
 @pytest.mark.parametrize("command", ["probe", "install-preview", "install"])

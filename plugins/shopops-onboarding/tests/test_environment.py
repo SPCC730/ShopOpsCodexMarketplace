@@ -28,6 +28,57 @@ def test_probe_accepts_apple_silicon_with_python_312(monkeypatch):
     assert probe.reason is None
 
 
+def test_probe_accepts_windows_x64_with_python_311(monkeypatch):
+    """A 64-bit Windows interpreter can consume the locked Windows wheels."""
+    monkeypatch.setattr(platform, "system", lambda: "Windows")
+    monkeypatch.setattr(platform, "machine", lambda: "AMD64")
+
+    class CompletedProcess:
+        returncode = 0
+        stdout = (
+            '{"implementation": "cpython", "version_info": [3, 11, 15], '
+            '"python_architecture": "AMD64", "python_platform": "win-amd64", '
+            '"python_executable": "C:\\\\Python311\\\\python.exe"}'
+        )
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(),
+    )
+
+    probe = probe_environment(candidates=[("py", "-3.11")])
+
+    assert probe.supported is True
+    assert probe.python_executable == "C:\\Python311\\python.exe"
+    assert probe.python_version == "3.11.15"
+    assert probe.python_architecture == "AMD64"
+    assert probe.python_platform == "win-amd64"
+    assert probe.reason is None
+
+
+def test_probe_rejects_32_bit_python_on_windows_x64(monkeypatch):
+    monkeypatch.setattr(platform, "system", lambda: "Windows")
+    monkeypatch.setattr(platform, "machine", lambda: "AMD64")
+
+    class CompletedProcess:
+        returncode = 0
+        stdout = (
+            '{"implementation": "cpython", "version_info": [3, 12, 8], '
+            '"python_architecture": "x86", "python_platform": "win32", '
+            '"python_executable": "C:\\\\Python312-32\\\\python.exe"}'
+        )
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(),
+    )
+
+    probe = probe_environment(candidates=[("py", "-3.12-32")])
+
+    assert probe.supported is False
+    assert probe.reason == "unsupported_python"
+
+
 def test_probe_rejects_intel_mac(monkeypatch):
     """Intel Macs are rejected before attempting Python discovery."""
     monkeypatch.setattr(platform, "system", lambda: "Darwin")

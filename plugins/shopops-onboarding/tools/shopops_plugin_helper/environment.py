@@ -15,10 +15,11 @@ _VERSION_QUERY = (
     "print(json.dumps({'implementation': sys.implementation.name, "
     "'version_info': list(sys.version_info[:3]), "
     "'python_architecture': platform.machine(), "
-    "'python_platform': sysconfig.get_platform()}))"
+    "'python_platform': sysconfig.get_platform(), "
+    "'python_executable': sys.executable}))"
 )
-_DEFAULT_CANDIDATES = ("python3.12", "python3.11", sys.executable)
 _SUPPORTED_VERSIONS = {(3, 11), (3, 12)}
+_WINDOWS_X64_ARCHITECTURES = {"amd64", "x86_64"}
 
 
 @dataclass(frozen=True)
@@ -35,11 +36,11 @@ class EnvironmentProbe:
     reason: str | None
 
 
-def probe_environment(candidates: Sequence[str] | None = None) -> EnvironmentProbe:
+def probe_environment(candidates: Sequence[str | Sequence[str]] | None = None) -> EnvironmentProbe:
     """Return installation support using only the declared interpreter candidates."""
     os_name = platform.system()
     architecture = platform.machine()
-    if (os_name, architecture) != ("Darwin", "arm64"):
+    if platform_key(os_name, architecture) is None:
         return EnvironmentProbe(
             os_name=os_name,
             architecture=architecture,
@@ -51,21 +52,27 @@ def probe_environment(candidates: Sequence[str] | None = None) -> EnvironmentPro
             reason="unsupported_platform",
         )
 
-    for candidate in _DEFAULT_CANDIDATES if candidates is None else candidates:
+    selected_candidates = _default_candidates(os_name) if candidates is None else candidates
+    for candidate in selected_candidates:
         details = _read_python_details(candidate)
         if details is None:
             continue
 
-        implementation, version_info, python_architecture, python_platform = details
+        implementation, version_info, python_architecture, python_platform, python_executable = details
         if (
             implementation == "cpython"
             and version_info[:2] in _SUPPORTED_VERSIONS
-            and is_arm64_compatible(python_architecture, python_platform)
+            and is_interpreter_compatible(
+                os_name,
+                architecture,
+                python_architecture,
+                python_platform,
+            )
         ):
             return EnvironmentProbe(
                 os_name=os_name,
                 architecture=architecture,
-                python_executable=candidate,
+                python_executable=python_executable,
                 python_version=".".join(str(part) for part in version_info),
                 python_architecture=python_architecture,
                 python_platform=python_platform,
@@ -94,13 +101,54 @@ def is_arm64_compatible(architecture: str, platform_tag: str) -> bool:
     )
 
 
+def platform_key(os_name: str, architecture: str) -> str | None:
+    """Map a supported host to its locked wheelhouse key."""
+    normalized_architecture = architecture.lower()
+    if os_name == "Darwin" and normalized_architecture == "arm64":
+        return "macos-arm64"
+    if os_name == "Windows" and normalized_architecture in _WINDOWS_X64_ARCHITECTURES:
+        return "windows-x64"
+    return None
+
+
+def is_interpreter_compatible(
+    os_name: str,
+    host_architecture: str,
+    python_architecture: str,
+    platform_tag: str,
+) -> bool:
+    """Return whether an interpreter can consume its host's locked wheels."""
+    selected_platform = platform_key(os_name, host_architecture)
+    if selected_platform == "macos-arm64":
+        return is_arm64_compatible(python_architecture, platform_tag)
+    if selected_platform == "windows-x64":
+        return (
+            python_architecture.lower() in _WINDOWS_X64_ARCHITECTURES
+            and platform_tag.lower() in {"win-amd64", "win_amd64"}
+        )
+    return False
+
+
+def _default_candidates(os_name: str) -> tuple[str | tuple[str, ...], ...]:
+    if os_name == "Windows":
+        return (
+            ("py", "-3.12"),
+            ("py", "-3.11"),
+            "python3.12",
+            "python3.11",
+            sys.executable,
+        )
+    return ("python3.12", "python3.11", sys.executable)
+
+
 def _read_python_details(
-    candidate: str,
-) -> tuple[str, tuple[int, int, int], str, str] | None:
+    candidate: str | Sequence[str],
+) -> tuple[str, tuple[int, int, int], str, str, str] | None:
     """Ask an interpreter for its implementation, version, and compatible platform."""
     try:
+        command = [candidate] if isinstance(candidate, str) else list(candidate)
         completed = subprocess.run(
-            [candidate, "-c", _VERSION_QUERY],
+            [*command, "-c", _VERSION_QUERY],
             capture_output=True,
             check=False,
             text=True,
@@ -118,6 +166,9 @@ def _read_python_details(
         raw_version = payload["version_info"]
         python_architecture = payload["python_architecture"]
         python_platform = payload["python_platform"]
+        python_executable = payload.get("python_executable")
+        if python_executable is None and isinstance(candidate, str):
+            python_executable = candidate
         if (
             not isinstance(implementation, str)
             or not implementation
@@ -131,9 +182,11 @@ def _read_python_details(
             or not python_architecture
             or not isinstance(python_platform, str)
             or not python_platform
+            or not isinstance(python_executable, str)
+            or not python_executable
         ):
             return None
     except (json.JSONDecodeError, KeyError, TypeError):
         return None
 
-    return implementation, tuple(raw_version), python_architecture, python_platform
+    return implementation, tuple(raw_version), python_architecture, python_platform, python_executable

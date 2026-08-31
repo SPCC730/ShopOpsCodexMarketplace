@@ -80,8 +80,8 @@ def write_test_wheel(
 
 def fake_plugin_root(tmp_path: Path) -> Path:
     plugin_root = tmp_path / "plugin"
-    for abi in ("cp311", "cp312"):
-        directory = plugin_root / "wheelhouse" / "macos-arm64" / abi
+    for platform_name, abi in wheelhouse_writer.SUPPORTED_WHEELHOUSES:
+        directory = plugin_root / "wheelhouse" / platform_name / abi
         directory.mkdir(parents=True)
         write_test_wheel(
             directory / "shopops_reporter-0.1.0-py3-none-any.whl",
@@ -284,6 +284,31 @@ def test_same_version_lock_preserves_other_platform_checksum_inventory(tmp_path)
     assert wheelhouse_writer.locked_requirements(plugin_root, "macos-arm64", "cp311", "0.1.0")
 
 
+def test_manifest_writer_records_each_platform_reporter_version(tmp_path):
+    plugin_root = fake_plugin_root(tmp_path)
+    windows_wheel = (
+        plugin_root
+        / "wheelhouse/windows-x64/cp311/shopops_reporter-0.1.0-py3-none-any.whl"
+    )
+    windows_wheel.unlink()
+    write_test_wheel(
+        windows_wheel.with_name("shopops_reporter-0.2.0-py3-none-any.whl"),
+        "shopops-reporter",
+        "0.2.0",
+        ("dependency>=1",),
+    )
+
+    wheelhouse_writer.write_manifests(plugin_root, "0.2.0")
+
+    manifest = json.loads((plugin_root / "reporter-manifest.json").read_text())
+    versions = {
+        (entry["platform"], entry["python"]): entry["reporter_version"]
+        for entry in manifest["wheelhouses"]
+    }
+    assert versions[("macos-arm64", "311")] == "0.1.0"
+    assert versions[("windows-x64", "311")] == "0.2.0"
+
+
 def test_promotion_creates_clean_bootstrap_parents(tmp_path):
     """Catch a clean install path that assumes wheelhouse parents already exist."""
     source_root = fake_plugin_root(tmp_path / "source")
@@ -327,49 +352,58 @@ def test_promotion_rolls_back_every_replacement_failure(tmp_path, failure_call):
     assert plugin_snapshot(plugin_root) == before
 
 
-@pytest.mark.parametrize("abi", ["cp311", "cp312"])
-def test_wheelhouse_contains_reporter_and_verified_dependencies(abi):
+@pytest.mark.parametrize(
+    ("platform_name", "abi"),
+    [(platform_name, abi) for platform_name, abi in wheelhouse_writer.SUPPORTED_WHEELHOUSES],
+)
+def test_wheelhouse_contains_reporter_and_verified_dependencies(platform_name, abi):
     """Catch a missing, altered, or source-only artifact before offline installation."""
-    files = manifest_files("macos-arm64", abi)
+    files = manifest_files(platform_name, abi)
 
     assert files
     assert list(files) == sorted(files)
-    assert any(name.startswith("shopops_reporter-0.1.2-") for name in files)
+    assert any(name.startswith("shopops_reporter-0.1.3-") for name in files)
     assert all(name.endswith(".whl") for name in files)
     assert all(path.is_file() and sha256(path) == expected for path, expected in files.values())
 
 
-@pytest.mark.parametrize("abi", ["cp311", "cp312"])
-def test_checksums_inventory_matches_manifest_and_wheelhouse(abi):
+@pytest.mark.parametrize(
+    ("platform_name", "abi"),
+    [(platform_name, abi) for platform_name, abi in wheelhouse_writer.SUPPORTED_WHEELHOUSES],
+)
+def test_checksums_inventory_matches_manifest_and_wheelhouse(platform_name, abi):
     """Catch drift between the install manifest, checksum inventory, and payload."""
     checksums = json.loads((PLUGIN_ROOT / "checksums.json").read_text())
-    files = manifest_files("macos-arm64", abi)
+    files = manifest_files(platform_name, abi)
     relative_paths = {
-        f"wheelhouse/macos-arm64/{abi}/{name}": expected
+        f"wheelhouse/{platform_name}/{abi}/{name}": expected
         for name, (_, expected) in files.items()
     }
 
     assert {key: checksums[key] for key in relative_paths} == relative_paths
     assert sorted(checksums) == list(checksums)
-    assert set(path.name for path in (WHEELHOUSE_ROOT / "macos-arm64" / abi).iterdir()) == set(files)
+    assert set(path.name for path in (WHEELHOUSE_ROOT / platform_name / abi).iterdir()) == set(files)
 
 
-@pytest.mark.parametrize("abi", ["cp311", "cp312"])
-def test_wheelhouse_has_every_active_runtime_dependency(abi):
+@pytest.mark.parametrize(
+    ("platform_name", "abi"),
+    [(platform_name, abi) for platform_name, abi in wheelhouse_writer.SUPPORTED_WHEELHOUSES],
+)
+def test_wheelhouse_has_every_active_runtime_dependency(platform_name, abi):
     """Catch a conditional or transitive dependency absent from an offline install."""
-    files = manifest_files("macos-arm64", abi)
+    files = manifest_files(platform_name, abi)
     wheels = [path for path, _ in files.values()]
     available = {wheel_name(path): wheel_version(path) for path in wheels}
     environment = default_environment()
     environment.update(
         {
             "implementation_name": "cpython",
-            "platform_machine": "arm64",
+            "platform_machine": "arm64" if platform_name == "macos-arm64" else "AMD64",
             "platform_python_implementation": "CPython",
-            "platform_system": "Darwin",
+            "platform_system": "Darwin" if platform_name == "macos-arm64" else "Windows",
             "python_full_version": f"{abi[2]}.{abi[3:]}.0",
             "python_version": f"{abi[2]}.{abi[3:]}",
-            "sys_platform": "darwin",
+            "sys_platform": "darwin" if platform_name == "macos-arm64" else "win32",
         }
     )
 

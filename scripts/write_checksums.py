@@ -14,7 +14,12 @@ from pathlib import Path
 from zipfile import ZipFile
 
 
-SUPPORTED_WHEELHOUSES = (("macos-arm64", "cp311"), ("macos-arm64", "cp312"))
+SUPPORTED_WHEELHOUSES = (
+    ("macos-arm64", "cp311"),
+    ("macos-arm64", "cp312"),
+    ("windows-x64", "cp311"),
+    ("windows-x64", "cp312"),
+)
 
 
 class LockUnavailable(Exception):
@@ -93,6 +98,8 @@ def _matching_entry(
     if not current_version_entries:
         raise LockUnavailable(f"no_same_version_lock:{platform}:{abi}:{reporter_version}")
     platform_entries = [entry for entry in current_version_entries if entry["platform"] == platform]
+    if not platform_entries:
+        raise LockUnavailable(f"no_platform_lock:{platform}:{reporter_version}")
     for required_abi in ("cp311", "cp312"):
         required_python = required_abi.removeprefix("cp")
         if not any(entry["python"] == required_python for entry in platform_entries):
@@ -177,13 +184,14 @@ def promote_release(
     replace=os.replace,
 ) -> None:
     """Replace wheelhouse and metadata together, restoring prior bytes on any failure."""
-    live_platform_root = plugin_root / "wheelhouse" / "macos-arm64"
+    platform = staged_platform_root.name
+    live_platform_root = plugin_root / "wheelhouse" / platform
     live_manifest = plugin_root / "reporter-manifest.json"
     live_checksums = plugin_root / "checksums.json"
     live_platform_root.parent.mkdir(parents=True, exist_ok=True)
     backup_root.mkdir(parents=True, exist_ok=True)
     targets = (
-        (staged_platform_root, live_platform_root, backup_root / "macos-arm64"),
+        (staged_platform_root, live_platform_root, backup_root / platform),
         (staged_manifest, live_manifest, backup_root / "reporter-manifest.json"),
         (staged_checksums, live_checksums, backup_root / "checksums.json"),
     )
@@ -236,6 +244,7 @@ def write_manifests(
     checksums_output = checksums_output or plugin_root / "checksums.json"
     checksums: dict[str, str] = {}
     entries: list[dict[str, object]] = []
+    discovered_reporter_versions: set[str] = set()
 
     for platform, abi in SUPPORTED_WHEELHOUSES:
         directory = wheelhouse_root / platform / abi
@@ -246,16 +255,27 @@ def write_manifests(
             checksums[f"wheelhouse/{platform}/{abi}/{path.name}"] = digest
             file_entries.append({"name": path.name, "sha256": digest})
 
-        if not any(path.name.startswith(f"shopops_reporter-{reporter_version}-") for path in files):
-            raise ValueError(f"Reporter {reporter_version} is missing from {directory}")
+        reporter_wheels = [
+            (path, version)
+            for path in files
+            for name, version in (wheel_metadata(path),)
+            if name.lower().replace("-", "_") == "shopops_reporter"
+        ]
+        if len(reporter_wheels) != 1:
+            raise ValueError(f"Exactly one Reporter wheel is required in {directory}")
+        platform_reporter_version = reporter_wheels[0][1]
+        discovered_reporter_versions.add(platform_reporter_version)
         entries.append(
             {
-                "reporter_version": reporter_version,
+                "reporter_version": platform_reporter_version,
                 "platform": platform,
                 "python": abi.removeprefix("cp"),
                 "files": file_entries,
             }
         )
+
+    if reporter_version not in discovered_reporter_versions:
+        raise ValueError(f"Reporter {reporter_version} is missing from the staged wheelhouse")
 
     manifest_output.write_text(
         json.dumps({"wheelhouses": entries}, indent=2, sort_keys=True) + "\n", encoding="utf-8"

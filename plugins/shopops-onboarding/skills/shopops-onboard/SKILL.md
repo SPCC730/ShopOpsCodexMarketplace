@@ -7,12 +7,15 @@ Act only after the developer explicitly invokes this skill. WP1 installs the loc
 Reporter runtime only; it does not inspect, scan, connect, or execute a business
 project, and it does not enroll a device.
 
-1. From the installed plugin directory, run
-   `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. Report the
-   JSON result and stop if `environment.supported` is false. WP1 supports only
-   macOS Apple Silicon with CPython 3.11 or 3.12.
-2. Run
-   `PYTHONPATH=tools python3 -m shopops_plugin_helper install-preview --json`.
+1. From the installed plugin directory, run the helper with an available Python
+   interpreter. On macOS use
+   `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. On Windows
+   PowerShell set `$env:PYTHONPATH = "tools"` and use `py -3.12 -m
+   shopops_plugin_helper probe --json`, or `py -3.11` when 3.12 is unavailable.
+   Report the JSON result and stop if `environment.supported` is false. WP1
+   supports Apple Silicon macOS and Windows x64 with CPython 3.11 or 3.12.
+2. Run `shopops_plugin_helper install-preview --json` with the same helper
+   interpreter and `PYTHONPATH` selected in step 1.
    This validates the checksum-locked offline wheelhouse and reports the exact
    Reporter version, runtime directory, stable shim, and whether a change is
    needed. Explain that the installer uses `pip --no-index` and never contacts
@@ -20,8 +23,9 @@ project, and it does not enroll a device.
 3. Show the complete preview, including the version and paths. 等待开发者明确确认
    the exact previewed version before running any install command. Do not infer
    confirmation from the original request or from a prior confirmation.
-4. Only after that confirmation, run
-   `PYTHONPATH=tools python3 -m shopops_plugin_helper install --confirm-version <previewed-version> --json`.
+4. Only after that confirmation, run `shopops_plugin_helper install
+   --confirm-version <previewed-version> --json` with the same helper interpreter
+   and `PYTHONPATH` selected in step 1.
    Do not substitute a different version. Report the returned runtime and stable
    shim paths.
 5. Run the returned stable shim as
