@@ -51,11 +51,15 @@ jobs:
             declared_operator = $null
             private_key_storage = "file"
           } | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $reporterHome "device.json")
-          Set-Content -Encoding ascii (Join-Path $reporterHome "device.key") "smoke-test-key"
+          $privateKey = & $runtimePython -c "from shopops_reporter.client import generate_private_key; print(generate_private_key()[0])"
+          Set-Content -Encoding ascii (Join-Path $reporterHome "device.key") $privateKey
           & $shim start
           if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not start" }
           $status = & $shim --json status | ConvertFrom-Json
-          if (-not $status.data.daemon.running) { throw "Reporter daemon is not running" }
+          if (-not $status.data.daemon.running) {
+            Get-Content (Join-Path $reporterHome "reporter.log") -ErrorAction SilentlyContinue
+            throw "Reporter daemon is not running"
+          }
           & $shim stop
           if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not stop" }
           Pop-Location
