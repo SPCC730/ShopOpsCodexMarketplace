@@ -211,7 +211,10 @@ def test_windows_install_writes_relative_runtime_launcher_and_stable_cmd_shim(
     stable_shim = reporter_home / "bin/shopops-report.cmd"
     assert result.shim_path == str(stable_shim)
     assert runtime_launcher.read_text(encoding="utf-8") == (
-        "@echo off\n\"%~dp0python.exe\" -m shopops_reporter %*\nexit /b %ERRORLEVEL%\n"
+        "@echo off\n"
+        'set "PYTHONUTF8=1"\n'
+        '"%~dp0python.exe" -m shopops_reporter %*\n'
+        "exit /b %ERRORLEVEL%\n"
     )
     assert stable_shim.read_text(encoding="utf-8") == (
         '@echo off\ncall "%~dp0..\\runtime\\0.1.0\\venv\\Scripts\\shopops-report.cmd" %*\n'
@@ -425,7 +428,7 @@ def test_install_preview_cli_supports_system_python39():
     assert completed.returncode == 0, completed.stdout + completed.stderr
     payload = json.loads(completed.stdout)
     assert payload["schema_version"] == 1
-    assert payload["install"]["version"] == "0.1.4"
+    assert payload["install"]["version"] == "0.1.5"
 
 
 @pytest.mark.parametrize("command", ["probe", "install-preview", "install"])

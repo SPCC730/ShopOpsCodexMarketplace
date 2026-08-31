@@ -39,7 +39,8 @@ jobs:
           from shopops_reporter.cli import split_command
           assert split_command('"C:\\Program Files\\Python311\\python.exe" task.py') == [r'C:\Program Files\Python311\python.exe', 'task.py']
           '@
-          python -c $parserCheck
+          $runtimePython = Join-Path $preview.install.runtime_dir "venv\Scripts\python.exe"
+          & $runtimePython -c $parserCheck
 
           $reporterHome = Join-Path $env:LOCALAPPDATA "ShopOps\Reporter"
           @{

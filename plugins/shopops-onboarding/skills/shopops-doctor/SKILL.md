@@ -28,7 +28,8 @@ state. Do not inspect, scan, connect, or execute a business project.
    canonical `#!/bin/sh` and `exec <expected-runtime-binary> "$@"`
    content. The Windows shim must call only
    `%~dp0..\runtime\<active-version>\venv\Scripts\shopops-report.cmd`, and that
-   runtime launcher must invoke only `%~dp0python.exe -m shopops_reporter %*`.
+   runtime launcher may set only `PYTHONUTF8=1` before invoking
+   `%~dp0python.exe -m shopops_reporter %*`.
    Resolve
    that target, ensure it is an executable regular file under
    `<reporter-home>/runtime/`, and reject symlink escapes or any other target.

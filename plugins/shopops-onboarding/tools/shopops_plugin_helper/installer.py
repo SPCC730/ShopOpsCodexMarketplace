@@ -366,7 +366,7 @@ def _relocate_console_script(
         raise InstallError("missing_reporter_binary")
     if layout.windows:
         reporter_binary.write_text(
-            '@echo off\n"%~dp0python.exe" -m shopops_reporter %*\n'
+            '@echo off\nset "PYTHONUTF8=1"\n"%~dp0python.exe" -m shopops_reporter %*\n'
             "exit /b %ERRORLEVEL%\n",
             encoding="utf-8",
         )
