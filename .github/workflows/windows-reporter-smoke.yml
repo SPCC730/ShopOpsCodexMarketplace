@@ -66,6 +66,7 @@ jobs:
             Write-Output "Reporter PID file is missing"
           }
           $status = & $shim --json status | ConvertFrom-Json
+          $status | ConvertTo-Json -Depth 5
           if (-not $status.data.daemon.running) {
             Get-Content (Join-Path $reporterHome "reporter.log") -ErrorAction SilentlyContinue
             throw "Reporter daemon is not running"
