@@ -55,6 +55,16 @@ jobs:
           Set-Content -Encoding ascii (Join-Path $reporterHome "device.key") $privateKey
           & $shim start
           if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not start" }
+          Start-Sleep -Milliseconds 500
+          $pidPath = Join-Path $reporterHome "reporter.pid"
+          if (Test-Path $pidPath) {
+            $daemonPid = [int](Get-Content $pidPath)
+            Get-Process -Id $daemonPid -ErrorAction SilentlyContinue | Format-List Id, ProcessName, HasExited
+            $nativeProbe = "from shopops_reporter.daemon import process_running; print(process_running($daemonPid))"
+            & $runtimePython -c $nativeProbe
+          } else {
+            Write-Output "Reporter PID file is missing"
+          }
           $status = & $shim --json status | ConvertFrom-Json
           if (-not $status.data.daemon.running) {
             Get-Content (Join-Path $reporterHome "reporter.log") -ErrorAction SilentlyContinue
