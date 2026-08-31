@@ -231,7 +231,7 @@ def _validate_wheels(
     if not any(name.startswith(f"shopops_reporter-{version}-") for name in names):
         raise InstallError("missing_reporter_wheel")
 
-    for item, path in zip(files, actual, strict=True):
+    for item, path in zip(files, actual):
         expected_digest = item.get("sha256")
         relative = f"wheelhouse/{_PLATFORM}/{abi}/{path.name}"
         if not isinstance(expected_digest, str) or checksums.get(relative) != expected_digest:

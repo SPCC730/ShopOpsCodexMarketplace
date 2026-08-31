@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import stat
@@ -303,6 +304,38 @@ def test_install_preview_and_confirmed_install_emit_result(monkeypatch, capsys, 
         "schema_version": 1,
         "install": {"version": "0.1.0", "runtime_dir": "/runtime", "shim_path": "/shim", "changed": True},
     }
+
+
+def test_install_preview_cli_supports_system_python39():
+    """The documented python3 entrypoint must work with macOS's Python 3.9."""
+    python3 = shutil.which("python3")
+    if python3 is None:
+        pytest.skip("python3 is not available")
+    version = tuple(
+        json.loads(
+            subprocess.check_output(
+                [python3, "-c", "import json, sys; print(json.dumps(list(sys.version_info[:2])))"],
+                text=True,
+            )
+        )
+    )
+    if version >= (3, 10):
+        pytest.skip("system python3 is not an affected pre-3.10 runtime")
+
+    plugin_root = Path(__file__).resolve().parents[1]
+    completed = subprocess.run(
+        [python3, "-m", "shopops_plugin_helper", "install-preview", "--json"],
+        cwd=plugin_root,
+        env={**os.environ, "PYTHONPATH": "tools"},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    payload = json.loads(completed.stdout)
+    assert payload["schema_version"] == 1
+    assert payload["install"]["version"] == "0.1.2"
 
 
 @pytest.mark.parametrize("command", ["probe", "install-preview", "install"])
