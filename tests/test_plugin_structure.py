@@ -66,7 +66,7 @@ def test_plugin_has_only_the_two_wp1_skill_entrypoints():
 
 def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
     for skill_name, scope in SKILL_SCOPES.items():
-        contents = (SKILLS_ROOT / skill_name / "SKILL.md").read_text()
+        contents = (SKILLS_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
         assert contents.startswith("---\n"), f"{skill_name} must have YAML frontmatter"
         frontmatter_end = contents.find("\n---\n", 4)
         assert frontmatter_end != -1, f"{skill_name} frontmatter must be closed"
@@ -90,8 +90,8 @@ def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
 
 
 def test_wp1_skills_keep_the_required_authorization_and_retention_boundaries():
-    onboard = (SKILLS_ROOT / "shopops-onboard" / "SKILL.md").read_text()
-    doctor = (SKILLS_ROOT / "shopops-doctor" / "SKILL.md").read_text()
+    onboard = (SKILLS_ROOT / "shopops-onboard" / "SKILL.md").read_text(encoding="utf-8")
+    doctor = (SKILLS_ROOT / "shopops-doctor" / "SKILL.md").read_text(encoding="utf-8")
 
     assert "install-preview" in onboard
     assert "等待开发者明确确认" in onboard

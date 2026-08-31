@@ -20,10 +20,23 @@ def test_probe_accepts_apple_silicon_with_python_312(monkeypatch):
     monkeypatch.setattr(platform, "system", lambda: "Darwin")
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
 
-    probe = probe_environment(candidates=[sys.executable])
+    class CompletedProcess:
+        returncode = 0
+        stdout = (
+            '{"implementation": "cpython", "version_info": [3, 12, 13], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64", '
+            '"python_executable": "/opt/homebrew/bin/python3.12"}'
+        )
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(),
+    )
+
+    probe = probe_environment(candidates=["python3.12"])
 
     assert probe.supported is True
-    assert probe.python_executable == sys.executable
+    assert probe.python_executable == "/opt/homebrew/bin/python3.12"
     assert probe.python_version.startswith("3.12")
     assert probe.reason is None
 
