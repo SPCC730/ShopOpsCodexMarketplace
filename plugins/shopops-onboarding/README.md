@@ -24,7 +24,10 @@ Reporter 配对、项目 `init`、脚本 `run`、结果查看和断网补传不�
 
 `shopops-onboarding` provides the WP1 local installation and diagnosis path for
 ShopOps Reporter. It supports Apple Silicon macOS and Windows x64 with CPython
-3.11 or 3.12, using platform-specific checksum-locked offline wheelhouses. The
+3.11 and newer Python 3 versions, using platform-specific checksum-locked offline
+wheelhouses. The current release contains locked wheels for CPython 3.11, 3.12,
+3.13, and 3.14; newer versions require a published wheelhouse before they can be
+installed. The
 installer uses `pip --no-index` and never contacts PyPI.
 
 Stable command paths:

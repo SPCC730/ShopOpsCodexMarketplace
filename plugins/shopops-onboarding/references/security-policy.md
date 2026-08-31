@@ -1,8 +1,10 @@
 # ShopOps Reporter WP1 Security Policy
 
 WP1 is intentionally limited to local Reporter installation and read-only
-diagnosis. It supports Apple Silicon macOS and Windows x64 with CPython 3.11 or
-3.12 only.
+diagnosis. It supports Apple Silicon macOS and Windows x64 with CPython 3.11 and
+newer Python 3 versions. The current checksum-locked release contains wheelhouses
+for 3.11, 3.12, 3.13, and 3.14; a newer interpreter must wait for its own
+wheelhouse rather than reuse a different CPython ABI.
 
 ## Authorization
 

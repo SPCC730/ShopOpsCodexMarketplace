@@ -10,10 +10,11 @@ project, and it does not enroll a device.
 1. From the installed plugin directory, run the helper with an available Python
    interpreter. On macOS use
    `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. On Windows
-   PowerShell set `$env:PYTHONPATH = "tools"` and use `py -3.12 -m
-   shopops_plugin_helper probe --json`, or `py -3.11` when 3.12 is unavailable.
-   Report the JSON result and stop if `environment.supported` is false. WP1
-   supports Apple Silicon macOS and Windows x64 with CPython 3.11 or 3.12.
+   PowerShell set `$env:PYTHONPATH = "tools"` and use the installed `py` launcher
+   or `python` command. Report the JSON result and stop if
+   `environment.supported` is false. WP1 accepts CPython 3.11 and newer Python 3
+   versions on Apple Silicon macOS and Windows x64; the current offline release
+   has wheelhouses for 3.11 through 3.14.
 2. Run `shopops_plugin_helper install-preview --json` with the same helper
    interpreter and `PYTHONPATH` selected in step 1.
    This validates the checksum-locked offline wheelhouse and reports the exact

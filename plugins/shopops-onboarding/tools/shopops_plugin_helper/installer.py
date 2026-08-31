@@ -247,10 +247,10 @@ def _abi_for(python_version: str) -> str:
     pieces = python_version.split(".")
     if len(pieces) < 2 or not all(piece.isdigit() for piece in pieces[:2]):
         raise InstallError("invalid_python_version")
-    abi = f"cp{pieces[0]}{pieces[1]}"
-    if abi not in {"cp311", "cp312"}:
+    major, minor = (int(piece) for piece in pieces[:2])
+    if major != 3 or minor < 11:
         raise InstallError("unsupported_environment:unsupported_python")
-    return abi
+    return f"cp{major}{minor}"
 
 
 def _validate_wheels(

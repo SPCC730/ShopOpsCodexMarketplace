@@ -1,6 +1,6 @@
 # ShopOps Codex Marketplace
 
-公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.7`
+公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.8`
 用于安全安装和诊断 `ShopOps Reporter 0.1.6`。
 
 完整交互式说明书：
@@ -46,8 +46,11 @@ codex plugin marketplace add SPCC730/ShopOpsCodexMarketplace \
 
 锁定离线安装当前覆盖：
 
-- Apple Silicon macOS，CPython 3.11/3.12；
-- Windows 10/11 x64，CPython 3.11/3.12。
+- Apple Silicon macOS，CPython 3.11 及以上的 Python 3 版本；
+- Windows 10/11 x64，CPython 3.11 及以上的 Python 3 版本。
+
+当前锁定的离线安装包覆盖 CPython 3.11、3.12、3.13 和 3.14；更新的
+Python 版本需要先发布对应的 wheelhouse，插件不会拿其他 ABI 的包冒充安装。
 
 Windows 稳定命令位于
 `%LOCALAPPDATA%\ShopOps\Reporter\bin\shopops-report.cmd`。Marketplace 根目录的

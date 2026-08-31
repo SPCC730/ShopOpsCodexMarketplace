@@ -10,8 +10,9 @@ state. Do not inspect, scan, connect, or execute a business project.
 1. From the installed plugin directory, run the helper with an available Python
    interpreter. On macOS use
    `PYTHONPATH=tools python3 -m shopops_plugin_helper probe --json`. On Windows
-   PowerShell set `$env:PYTHONPATH = "tools"` and use `py -3.12 -m
-   shopops_plugin_helper probe --json`, or `py -3.11` when 3.12 is unavailable.
+   PowerShell set `$env:PYTHONPATH = "tools"` and use the installed `py` launcher
+   or `python` command. The probe accepts CPython 3.11 and newer Python 3
+   versions; the current offline release has wheelhouses for 3.11 through 3.14.
    If the environment is unsupported, report `repair_required` with the probe
    reason.
 2. Run `shopops_plugin_helper install-preview --json` with the same helper

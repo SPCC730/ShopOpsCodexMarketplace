@@ -40,7 +40,7 @@ if [[ -z "$reporter_wheel" ]]; then
 fi
 reporter_version=$("$PYTHON_BIN" -c 'import sys, tomllib; print(tomllib.load(open(sys.argv[1], "rb"))["project"]["version"])' "$REPORTER_DIR/pyproject.toml")
 
-for abi in cp311 cp312; do
+for abi in cp311 cp312 cp313 cp314; do
   stage="$staged_platform_root/$abi"
   lock_file="$build_dir/$abi-requirements.txt"
   mkdir -p "$stage"

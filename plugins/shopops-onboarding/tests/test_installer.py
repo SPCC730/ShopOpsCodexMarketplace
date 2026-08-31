@@ -82,7 +82,7 @@ def fake_wheelhouse(tmp_path: Path, *, tampered: bool = False, version: str = "0
     entries = []
     checksums: dict[str, str] = {}
     for platform_name in ("macos-arm64", "windows-x64"):
-        for abi in ("cp311", "cp312"):
+        for abi in ("cp311", "cp312", "cp313", "cp314"):
             wheel_dir = plugin_root / "wheelhouse" / platform_name / abi
             wheel_dir.mkdir(parents=True)
             wheel = wheel_dir / f"shopops_reporter-{version}-py3-none-any.whl"
@@ -105,6 +105,20 @@ def fake_wheelhouse(tmp_path: Path, *, tampered: bool = False, version: str = "0
         wheel = plugin_root / "wheelhouse/macos-arm64/cp312" / f"shopops_reporter-{version}-py3-none-any.whl"
         wheel.write_bytes(wheel.read_bytes() + b"tampered")
     return manifest, plugin_root
+
+
+@pytest.mark.parametrize(
+    ("python_version", "expected_abi"),
+    [("3.11.0", "cp311"), ("3.12.13", "cp312"), ("3.13.6", "cp313"), ("3.14.0", "cp314")],
+)
+def test_abi_for_supports_cpython_3_11_and_newer(python_version, expected_abi):
+    assert installer._abi_for(python_version) == expected_abi
+
+
+@pytest.mark.parametrize("python_version", ["3.10.14", "2.7.18", "4.0.0", "invalid"])
+def test_abi_for_rejects_unsupported_python_versions(python_version):
+    with pytest.raises(InstallError, match="unsupported_environment:unsupported_python|invalid_python_version"):
+        installer._abi_for(python_version)
 
 
 def fake_plugin_root(tmp_path: Path) -> Path:
@@ -399,8 +413,8 @@ def test_install_preview_and_confirmed_install_emit_result(monkeypatch, capsys, 
     }
 
 
-def test_install_preview_cli_supports_system_python39():
-    """The documented python3 entrypoint must work with macOS's Python 3.9."""
+def test_probe_rejects_an_explicit_system_python_below_minimum():
+    """An explicitly selected Python below 3.11 is not an install interpreter."""
     python3 = shutil.which("python3")
     if python3 is None:
         pytest.skip("python3 is not available")
@@ -412,23 +426,19 @@ def test_install_preview_cli_supports_system_python39():
             )
         )
     )
-    if version >= (3, 10):
-        pytest.skip("system python3 is not an affected pre-3.10 runtime")
+    if version >= (3, 11):
+        pytest.skip("system python3 is already within the supported range")
 
-    plugin_root = Path(__file__).resolve().parents[1]
     completed = subprocess.run(
-        [python3, "-m", "shopops_plugin_helper", "install-preview", "--json"],
-        cwd=plugin_root,
-        env={**os.environ, "PYTHONPATH": "tools"},
+        [python3, "-c", "import sys; sys.path.insert(0, 'tools'); from shopops_plugin_helper.environment import probe_environment; print(probe_environment(candidates=[sys.executable]).reason)"],
+        cwd=Path(__file__).resolve().parents[1],
         capture_output=True,
         text=True,
         check=False,
     )
 
     assert completed.returncode == 0, completed.stdout + completed.stderr
-    payload = json.loads(completed.stdout)
-    assert payload["schema_version"] == 1
-    assert payload["install"]["version"] == "0.1.6"
+    assert completed.stdout.strip() == "unsupported_python"
 
 
 @pytest.mark.parametrize("command", ["probe", "install-preview", "install"])

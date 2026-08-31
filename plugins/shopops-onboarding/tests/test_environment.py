@@ -69,6 +69,31 @@ def test_probe_accepts_windows_x64_with_python_311(monkeypatch):
     assert probe.reason is None
 
 
+@pytest.mark.parametrize("minor", [11, 12, 13, 14, 15])
+def test_probe_accepts_cpython_3_11_or_newer(monkeypatch, minor):
+    """Every CPython 3.11+ interpreter is eligible for ABI-specific lookup."""
+    monkeypatch.setattr(platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(platform, "machine", lambda: "arm64")
+
+    class CompletedProcess:
+        returncode = 0
+        stdout = (
+            f'{{"implementation": "cpython", "version_info": [3, {minor}, 0], '
+            '"python_architecture": "arm64", "python_platform": "macosx-15.0-arm64", '
+            '"python_executable": "/opt/python/bin/python"}'
+        )
+
+    monkeypatch.setattr(
+        "shopops_plugin_helper.environment.subprocess.run",
+        lambda *args, **kwargs: CompletedProcess(),
+    )
+
+    probe = probe_environment(candidates=["python"])
+
+    assert probe.supported is True
+    assert probe.python_version == f"3.{minor}.0"
+
+
 def test_probe_rejects_32_bit_python_on_windows_x64(monkeypatch):
     monkeypatch.setattr(platform, "system", lambda: "Windows")
     monkeypatch.setattr(platform, "machine", lambda: "AMD64")
@@ -171,7 +196,7 @@ def test_probe_skips_rosetta_python_and_selects_later_native_arm64_candidate(mon
 
 
 def test_probe_reports_unsupported_python_when_no_candidate_is_compatible(monkeypatch):
-    """A supported platform without CPython 3.11 or 3.12 remains unsupported."""
+    """A supported platform without a CPython 3.11+ candidate remains unsupported."""
     monkeypatch.setattr(platform, "system", lambda: "Darwin")
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
 

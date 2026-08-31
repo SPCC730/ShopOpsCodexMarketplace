@@ -18,7 +18,7 @@ _VERSION_QUERY = (
     "'python_platform': sysconfig.get_platform(), "
     "'python_executable': sys.executable}))"
 )
-_SUPPORTED_VERSIONS = {(3, 11), (3, 12)}
+_MIN_SUPPORTED_VERSION = (3, 11)
 _WINDOWS_X64_ARCHITECTURES = {"amd64", "x86_64"}
 
 
@@ -61,7 +61,8 @@ def probe_environment(candidates: Sequence[str | Sequence[str]] | None = None) -
         implementation, version_info, python_architecture, python_platform, python_executable = details
         if (
             implementation == "cpython"
-            and version_info[:2] in _SUPPORTED_VERSIONS
+            and version_info[0] == 3
+            and version_info[:2] >= _MIN_SUPPORTED_VERSION
             and is_interpreter_compatible(
                 os_name,
                 architecture,
@@ -132,13 +133,23 @@ def is_interpreter_compatible(
 def _default_candidates(os_name: str) -> tuple[str | tuple[str, ...], ...]:
     if os_name == "Windows":
         return (
+            ("py", "-3.14"),
+            ("py", "-3.13"),
             ("py", "-3.12"),
             ("py", "-3.11"),
+            "python3.14",
+            "python3.13",
             "python3.12",
             "python3.11",
             sys.executable,
         )
-    return ("python3.12", "python3.11", sys.executable)
+    return (
+        "python3.14",
+        "python3.13",
+        "python3.12",
+        "python3.11",
+        sys.executable,
+    )
 
 
 def _read_python_details(

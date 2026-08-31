@@ -17,8 +17,12 @@ from zipfile import ZipFile
 SUPPORTED_WHEELHOUSES = (
     ("macos-arm64", "cp311"),
     ("macos-arm64", "cp312"),
+    ("macos-arm64", "cp313"),
+    ("macos-arm64", "cp314"),
     ("windows-x64", "cp311"),
     ("windows-x64", "cp312"),
+    ("windows-x64", "cp313"),
+    ("windows-x64", "cp314"),
 )
 
 
@@ -100,6 +104,8 @@ def _matching_entry(
     platform_entries = [entry for entry in current_version_entries if entry["platform"] == platform]
     if not platform_entries:
         raise LockUnavailable(f"no_platform_lock:{platform}:{reporter_version}")
+    # Keep the original release ABI pair mandatory while allowing a new
+    # Python minor version to bootstrap its first lock alongside it.
     for required_abi in ("cp311", "cp312"):
         required_python = required_abi.removeprefix("cp")
         if not any(entry["python"] == required_python for entry in platform_entries):
@@ -109,7 +115,7 @@ def _matching_entry(
 
     matches = [entry for entry in platform_entries if entry["python"] == abi.removeprefix("cp")]
     if len(matches) != 1:
-        raise LockValidationError(f"invalid_required_abi:{platform}:{abi}:{reporter_version}")
+        raise LockUnavailable(f"no_same_version_lock:{platform}:{abi}:{reporter_version}")
     return matches[0]
 
 
