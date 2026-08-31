@@ -238,10 +238,11 @@ def test_self_check_rejects_legacy_text_based_unpaired_status(tmp_path, monkeypa
     assert self_check(reporter_binary, "0.1.0") is False
 
 
-def test_windows_self_check_invokes_cmd_through_command_processor(tmp_path, monkeypatch):
+def test_windows_self_check_invokes_the_versioned_venv_python_directly(tmp_path, monkeypatch):
     reporter_binary = tmp_path / "home/runtime/0.1.0/venv/Scripts/shopops-report.cmd"
     reporter_binary.parent.mkdir(parents=True)
     reporter_binary.touch()
+    (reporter_binary.parent / "python.exe").touch()
     captured_command = None
 
     class CompletedProcess:
@@ -261,15 +262,13 @@ def test_windows_self_check_invokes_cmd_through_command_processor(tmp_path, monk
         captured_command = command
         return CompletedProcess()
 
-    monkeypatch.setenv("COMSPEC", r"C:\Windows\System32\cmd.exe")
     monkeypatch.setattr(installer.subprocess, "run", run)
 
     assert self_check(reporter_binary, "0.1.0") is True
     assert captured_command == [
-        r"C:\Windows\System32\cmd.exe",
-        "/d",
-        "/c",
-        str(reporter_binary),
+        str(reporter_binary.parent / "python.exe"),
+        "-m",
+        "shopops_reporter",
         "--json",
         "status",
     ]

@@ -146,10 +146,11 @@ def self_check(reporter_binary: Path, expected_version: str) -> bool:
         command = [str(reporter_binary), "--json", "status"]
         if reporter_binary.suffix.lower() == ".cmd":
             command = [
-                os.environ.get("COMSPEC", "cmd.exe"),
-                "/d",
-                "/c",
-                *command,
+                str(reporter_binary.parent / "python.exe"),
+                "-m",
+                "shopops_reporter",
+                "--json",
+                "status",
             ]
         completed = subprocess.run(
             command,
