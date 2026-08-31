@@ -428,7 +428,7 @@ def test_install_preview_cli_supports_system_python39():
     assert completed.returncode == 0, completed.stdout + completed.stderr
     payload = json.loads(completed.stdout)
     assert payload["schema_version"] == 1
-    assert payload["install"]["version"] == "0.1.5"
+    assert payload["install"]["version"] == "0.1.6"
 
 
 @pytest.mark.parametrize("command", ["probe", "install-preview", "install"])
