@@ -1,7 +1,7 @@
 # ShopOps Codex Marketplace
 
-公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.9`
-用于安全安装和诊断 `ShopOps Reporter 0.1.6`。
+公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.10`
+用于安全安装、更新和诊断 `ShopOps Reporter 0.1.7`。
 
 完整交互式说明书：
 
@@ -44,6 +44,12 @@ codex plugin marketplace add SPCC730/ShopOpsCodexMarketplace \
 
 首次安装显示 `not_paired` 是正常状态；已经配对的电脑应显示 `healthy`。
 
+已有 Reporter 的电脑更新时，在新任务中发送：
+
+```text
+请使用 $shopops-update 按 ShopOps 安全更新流程检查并升级 Reporter。先展示目标版本和影响范围，等我明确确认后再升级；保留设备身份、项目配置和离线队列，不重新配对、不重新上传项目，也不要运行任何业务脚本。
+```
+
 锁定离线安装当前覆盖：
 
 - Apple Silicon macOS，CPython 3.11 及以上的 Python 3 版本；
@@ -73,7 +79,7 @@ shopops-report run
 
 当前插件属于 WP1：
 
-- 支持 Reporter 环境探测、锁定版本安装和只读诊断；
+- 支持 Reporter 环境探测、锁定版本安装、安全更新和只读诊断；
 - 不扫描业务项目；
 - 不自动配对设备；
 - 不自动生成 `.shopops/`；

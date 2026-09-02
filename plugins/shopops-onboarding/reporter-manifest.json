@@ -71,8 +71,8 @@
           "sha256": "652cb6edd41e718550aad172851962662ff2681490a8a711af6a4d288dd96824"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -85,7 +85,7 @@
       ],
       "platform": "macos-arm64",
       "python": "311",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -150,8 +150,8 @@
           "sha256": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -160,7 +160,7 @@
       ],
       "platform": "macos-arm64",
       "python": "312",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -225,8 +225,8 @@
           "sha256": "2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -235,7 +235,7 @@
       ],
       "platform": "macos-arm64",
       "python": "313",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -300,8 +300,8 @@
           "sha256": "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -310,7 +310,7 @@
       ],
       "platform": "macos-arm64",
       "python": "314",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -387,8 +387,8 @@
           "sha256": "9f3bfb4965eb874431221a3ff3fdcddc7e74e3b07799e0e84ca4a0f867d449bf"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -401,7 +401,7 @@
       ],
       "platform": "windows-x64",
       "python": "311",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -470,8 +470,8 @@
           "sha256": "5fcd34e47f6e0b794d17de1b4ff496c00986e1c83f7ab2fb8fcfe9616ff7477b"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -480,7 +480,7 @@
       ],
       "platform": "windows-x64",
       "python": "312",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -549,8 +549,8 @@
           "sha256": "79005a0d97d5ddabfeeea4cf676af11e647e41d81c9a7722a193022accdb6b7c"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -559,7 +559,7 @@
       ],
       "platform": "windows-x64",
       "python": "313",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     },
     {
       "files": [
@@ -628,8 +628,8 @@
           "sha256": "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac"
         },
         {
-          "name": "shopops_reporter-0.1.6-py3-none-any.whl",
-          "sha256": "39f2a950edb1a53c5106b762841472d8e42b51a64d1750c93521d3f3395b1f0d"
+          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
+          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -638,7 +638,7 @@
       ],
       "platform": "windows-x64",
       "python": "314",
-      "reporter_version": "0.1.6"
+      "reporter_version": "0.1.7"
     }
   ]
 }

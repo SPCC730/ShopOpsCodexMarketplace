@@ -7,7 +7,11 @@ import yaml
 
 PLUGIN_ROOT = Path("plugins/shopops-onboarding")
 SKILLS_ROOT = PLUGIN_ROOT / "skills"
-SKILL_SCOPES = {"shopops-onboard": "onboard", "shopops-doctor": "diagnose"}
+SKILL_SCOPES = {
+    "shopops-onboard": "onboard",
+    "shopops-doctor": "diagnose",
+    "shopops-update": "update",
+}
 
 
 def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
@@ -32,7 +36,7 @@ def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
 def test_manifest_exposes_the_required_skill_path_without_runtime_components():
     manifest = json.loads((PLUGIN_ROOT / ".codex-plugin/plugin.json").read_text())
     assert manifest["name"] == "shopops-onboarding"
-    assert manifest["version"] == "0.1.9"
+    assert manifest["version"] == "0.1.10"
     assert manifest["skills"] == "./skills/"
     assert set(manifest).isdisjoint(
         {
@@ -57,10 +61,11 @@ def test_manifest_exposes_the_required_skill_path_without_runtime_components():
     )
 
 
-def test_plugin_has_only_the_two_wp1_skill_entrypoints():
+def test_plugin_has_only_the_expected_skill_entrypoints():
     assert {path.name for path in SKILLS_ROOT.iterdir() if path.is_dir()} == {
         "shopops-onboard",
         "shopops-doctor",
+        "shopops-update",
     }
 
 
@@ -92,11 +97,14 @@ def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
 def test_wp1_skills_keep_the_required_authorization_and_retention_boundaries():
     onboard = (SKILLS_ROOT / "shopops-onboard" / "SKILL.md").read_text(encoding="utf-8")
     doctor = (SKILLS_ROOT / "shopops-doctor" / "SKILL.md").read_text(encoding="utf-8")
+    update = (SKILLS_ROOT / "shopops-update" / "SKILL.md").read_text(encoding="utf-8")
 
     assert "install-preview" in onboard
     assert "等待开发者明确确认" in onboard
     assert onboard.index("等待开发者明确确认") < onboard.index("--confirm-version")
     assert "never install, repair, delete, enroll, pair, or change runtime" in doctor
+    assert "Wait for explicit confirmation of the exact locked target version" in update
+    assert "does not re-pair, re-upload, modify, synchronize, or run a project" in update
     for text in (onboard, doctor):
         assert "Removing this" in text
         assert "Codex plugin does not remove Reporter" in text

@@ -19,6 +19,12 @@
 请使用 $shopops-doctor 只读诊断 ShopOps Reporter。
 ```
 
+已有 Reporter 的电脑安全更新使用：
+
+```text
+请使用 $shopops-update 按 ShopOps 安全更新流程检查并升级 Reporter。先展示目标版本和影响范围，等我明确确认后再升级；不要重新配对、重新上传项目或运行业务脚本。
+```
+
 Reporter 配对、项目 `init`、脚本 `run`、结果查看和断网补传不属于 WP1 插件本身，
 请按独立网页说明书继续操作。
 
@@ -48,6 +54,9 @@ Stable command paths:
   Reporter runtime and stable shim, and reports `healthy`, `not_installed`,
   `not_paired`, `upgrade_available`, or `repair_required`. It never repairs or
   changes runtime state.
+- `shopops-update` compares the installed and checksum-locked Reporter versions,
+  previews the machine-level update, waits for exact-version confirmation, and
+  preserves device identity, project configuration, and the offline queue.
 
 WP1 does not scan, connect to, or execute business projects, and it does not
 enroll devices. It contains no MCP service, UI, browser extension, lifecycle
