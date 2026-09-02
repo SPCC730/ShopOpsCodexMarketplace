@@ -32,7 +32,7 @@ def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
 def test_manifest_exposes_the_required_skill_path_without_runtime_components():
     manifest = json.loads((PLUGIN_ROOT / ".codex-plugin/plugin.json").read_text())
     assert manifest["name"] == "shopops-onboarding"
-    assert manifest["version"] == "0.1.8"
+    assert manifest["version"] == "0.1.9"
     assert manifest["skills"] == "./skills/"
     assert set(manifest).isdisjoint(
         {

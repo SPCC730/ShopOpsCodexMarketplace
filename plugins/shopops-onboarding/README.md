@@ -22,6 +22,10 @@
 Reporter 配对、项目 `init`、脚本 `run`、结果查看和断网补传不属于 WP1 插件本身，
 请按独立网页说明书继续操作。
 
+项目需要展示看板时，可在项目 `.shopops/dashboard.json` 声明 `html` 静态文件或
+`live_service` 私有局域网 HTTP 地址。接入时只读检查这份声明；不会把任意 `BaseUrl`
+当作看板，也不会上传或代理看板内容。
+
 `shopops-onboarding` provides the WP1 local installation and diagnosis path for
 ShopOps Reporter. It supports Apple Silicon macOS and Windows x64 with CPython
 3.11 and newer Python 3 versions, using platform-specific checksum-locked offline

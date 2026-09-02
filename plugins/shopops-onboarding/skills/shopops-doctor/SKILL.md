@@ -5,7 +5,9 @@ description: Handle an explicitly invoked WP1 request to diagnose ShopOps Report
 
 Act only after the developer explicitly invokes this skill. This is a read-only
 WP1 diagnostic: never install, repair, delete, enroll, pair, or change runtime
-state. Do not inspect, scan, connect, or execute a business project.
+state. Do not inspect, scan, connect, or execute a business project. Dashboard
+discovery belongs to the separate explicit project-onboarding step in
+`shopops-onboard`, never to this diagnostic.
 
 1. From the installed plugin directory, run the helper with an available Python
    interpreter. On macOS use

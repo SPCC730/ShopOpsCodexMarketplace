@@ -1,6 +1,6 @@
 # ShopOps Codex Marketplace
 
-公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.8`
+公开的 ShopOps Codex 插件仓库。当前发布的 `shopops-onboarding 0.1.9`
 用于安全安装和诊断 `ShopOps Reporter 0.1.6`。
 
 完整交互式说明书：
