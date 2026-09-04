@@ -362,7 +362,7 @@ def test_wheelhouse_contains_reporter_and_verified_dependencies(platform_name, a
 
     assert files
     assert list(files) == sorted(files)
-    assert any(name.startswith("shopops_reporter-0.1.7-") for name in files)
+    assert any(name.startswith("shopops_reporter-0.3.0-") for name in files)
     assert all(name.endswith(".whl") for name in files)
     assert all(path.is_file() and sha256(path) == expected for path, expected in files.values())
 

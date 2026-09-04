@@ -1,6 +1,6 @@
 {
   "name": "shopops-onboarding",
-  "version": "0.1.10",
+  "version": "0.1.11+codex.20260903101554",
   "description": "Safely connect local script projects to ShopOps Reporter.",
   "author": {
     "name": "ShopOps"
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "ShopOps Onboarding",
     "shortDescription": "Connect local script projects to ShopOps Reporter.",
-    "longDescription": "Provides the WP1 entrypoints for ShopOps Reporter onboarding and diagnostics.",
+    "longDescription": "Provides ShopOps Reporter onboarding, diagnostics, updates, and reviewed result-contract generation.",
     "developerName": "ShopOps",
     "category": "Developer Tools",
     "capabilities": [],

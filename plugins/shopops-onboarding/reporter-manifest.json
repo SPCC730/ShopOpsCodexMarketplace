@@ -3,8 +3,8 @@
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "backports.tarfile-1.2.0-py3-none-any.whl",
@@ -23,6 +23,10 @@
           "sha256": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -63,6 +67,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -71,8 +79,8 @@
           "sha256": "652cb6edd41e718550aad172851962662ff2681490a8a711af6a4d288dd96824"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -85,13 +93,13 @@
       ],
       "platform": "macos-arm64",
       "python": "311",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -106,6 +114,10 @@
           "sha256": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -142,6 +154,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -150,8 +166,8 @@
           "sha256": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -160,13 +176,13 @@
       ],
       "platform": "macos-arm64",
       "python": "312",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -181,6 +197,10 @@
           "sha256": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -217,6 +237,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -225,8 +249,8 @@
           "sha256": "2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -235,13 +259,13 @@
       ],
       "platform": "macos-arm64",
       "python": "313",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -256,6 +280,10 @@
           "sha256": "b8f852c65863251b9e3a1b8c150ce21e59b522dbb6a7d4bc80e680d38388e986"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -292,6 +320,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -300,8 +332,8 @@
           "sha256": "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -310,13 +342,13 @@
       ],
       "platform": "macos-arm64",
       "python": "314",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "backports.tarfile-1.2.0-py3-none-any.whl",
@@ -335,6 +367,10 @@
           "sha256": "aed8db4f6d71c51efb89530e12d9464e7bf2923d46c3205dc794a2a93f8c0648"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -375,6 +411,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -387,8 +427,8 @@
           "sha256": "9f3bfb4965eb874431221a3ff3fdcddc7e74e3b07799e0e84ca4a0f867d449bf"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -401,13 +441,13 @@
       ],
       "platform": "windows-x64",
       "python": "311",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -422,6 +462,10 @@
           "sha256": "aed8db4f6d71c51efb89530e12d9464e7bf2923d46c3205dc794a2a93f8c0648"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -456,6 +500,10 @@
         {
           "name": "more_itertools-11.1.0-py3-none-any.whl",
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
+        },
+        {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
           "name": "pycparser-3.0-py3-none-any.whl",
@@ -470,8 +518,8 @@
           "sha256": "5fcd34e47f6e0b794d17de1b4ff496c00986e1c83f7ab2fb8fcfe9616ff7477b"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -480,13 +528,13 @@
       ],
       "platform": "windows-x64",
       "python": "312",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -501,6 +549,10 @@
           "sha256": "aed8db4f6d71c51efb89530e12d9464e7bf2923d46c3205dc794a2a93f8c0648"
         },
         {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+        },
+        {
           "name": "h11-0.16.0-py3-none-any.whl",
           "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
         },
@@ -535,6 +587,10 @@
         {
           "name": "more_itertools-11.1.0-py3-none-any.whl",
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
+        },
+        {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
           "name": "pycparser-3.0-py3-none-any.whl",
@@ -549,8 +605,8 @@
           "sha256": "79005a0d97d5ddabfeeea4cf676af11e647e41d81c9a7722a193022accdb6b7c"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -559,13 +615,13 @@
       ],
       "platform": "windows-x64",
       "python": "313",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     },
     {
       "files": [
         {
-          "name": "anyio-4.14.2-py3-none-any.whl",
-          "sha256": "9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"
+          "name": "anyio-4.15.0-py3-none-any.whl",
+          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -578,6 +634,10 @@
         {
           "name": "cryptography-50.0.1-cp311-abi3-win_amd64.whl",
           "sha256": "aed8db4f6d71c51efb89530e12d9464e7bf2923d46c3205dc794a2a93f8c0648"
+        },
+        {
+          "name": "et_xmlfile-2.0.0-py3-none-any.whl",
+          "sha256": "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
         },
         {
           "name": "h11-0.16.0-py3-none-any.whl",
@@ -616,6 +676,10 @@
           "sha256": "4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192"
         },
         {
+          "name": "openpyxl-3.1.5-py2.py3-none-any.whl",
+          "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -628,8 +692,8 @@
           "sha256": "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac"
         },
         {
-          "name": "shopops_reporter-0.1.7-py3-none-any.whl",
-          "sha256": "9bd91c31d94d8b43d78fcb073f6923509d3fc61e64b6e30d121d78e8b8937e83"
+          "name": "shopops_reporter-0.3.0-py3-none-any.whl",
+          "sha256": "cb65dd12a66475034f6b62101732c1b2303931aeae83b595bea902faae455ca6"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -638,7 +702,7 @@
       ],
       "platform": "windows-x64",
       "python": "314",
-      "reporter_version": "0.1.7"
+      "reporter_version": "0.3.0"
     }
   ]
 }

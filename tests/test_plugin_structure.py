@@ -36,7 +36,7 @@ def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
 def test_manifest_exposes_the_required_skill_path_without_runtime_components():
     manifest = json.loads((PLUGIN_ROOT / ".codex-plugin/plugin.json").read_text())
     assert manifest["name"] == "shopops-onboarding"
-    assert manifest["version"] == "0.1.10"
+    assert manifest["version"].startswith("0.1.11+codex.")
     assert manifest["skills"] == "./skills/"
     assert set(manifest).isdisjoint(
         {
@@ -66,7 +66,19 @@ def test_plugin_has_only_the_expected_skill_entrypoints():
         "shopops-onboard",
         "shopops-doctor",
         "shopops-update",
+        "shopops-result-contract",
     }
+
+
+def test_result_contract_skill_is_declarative_and_requires_confirmation():
+    contents = (SKILLS_ROOT / "shopops-result-contract" / "SKILL.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "shopops.result_contract.v1" in contents
+    assert "Wait for explicit confirmation of that digest" in contents
+    assert "Never generate or run an adapter script" in contents
+    assert "Never upload source code or sample business data" in contents
 
 
 def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():

@@ -57,6 +57,9 @@ Stable command paths:
 - `shopops-update` compares the installed and checksum-locked Reporter versions,
   previews the machine-level update, waits for exact-version confirmation, and
   preserves device identity, project configuration, and the offline queue.
+- `shopops-result-contract` analyzes an explicitly selected project, drafts a
+  non-executable `.shopops/result-contract.yaml`, validates sanitized result
+  samples, and submits the confirmed immutable contract for administrator review.
 
 WP1 does not scan, connect to, or execute business projects, and it does not
 enroll devices. It contains no MCP service, UI, browser extension, lifecycle
