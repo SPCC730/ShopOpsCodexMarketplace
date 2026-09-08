@@ -90,6 +90,8 @@ jobs:
           }
           & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\native_reporter_acceptance.py")
           if ($LASTEXITCODE -ne 0) { throw "Guided onboarding acceptance failed" }
+          & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\contract_v2_acceptance.py")
+          if ($LASTEXITCODE -ne 0) { throw "Contract v2 migration and code reuse acceptance failed" }
           & $shim stop
           if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not stop" }
           Pop-Location
