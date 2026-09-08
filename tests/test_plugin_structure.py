@@ -94,7 +94,7 @@ def test_result_contract_skill_is_declarative_and_requires_confirmation():
     assert "Never upload source code or sample business data" in contents
 
 
-def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
+def test_skills_keep_scoped_frontmatter_and_guided_routing():
     for skill_name, scope in SKILL_SCOPES.items():
         contents = (SKILLS_ROOT / skill_name / "SKILL.md").read_text(encoding="utf-8")
         assert contents.startswith("---\n"), f"{skill_name} must have YAML frontmatter"
@@ -115,7 +115,7 @@ def test_wp1_skills_preserve_the_approved_safe_frontmatter_contract():
         assert scope in description
         assert "[todo:" not in contents.lower()
 
-        assert "Act only after the developer explicitly invokes this skill." in body
+        assert "shopops-onboard" in body or skill_name == "shopops-onboard"
         assert "business" in body and "project" in body
 
 

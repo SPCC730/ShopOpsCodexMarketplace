@@ -3,7 +3,16 @@ name: shopops-doctor
 description: Handle an explicitly invoked WP1 request to diagnose ShopOps Reporter onboarding; do not use for general project diagnostics.
 ---
 
-Act only after the developer explicitly invokes this skill. This is a read-only
+For Reporter 0.5.0 projects, inspect the active result_contract.file reference within the
+selected task directory. Contract schema v2 does not bind approval to source fingerprints:
+source-only drift is not a reason to regenerate or re-review it. Diagnose
+result_contract_reporting_policy_mismatch as a changed reporting scope requiring a new
+contract. Diagnose result_contract_digest_changed as an unsubmitted local contract edit.
+v1 still uses the old source binding; suggest a separately confirmed migrate-schema --to v2
+flow for one-time review. Do not migrate, submit or run a project during diagnosis.
+
+Act when explicitly invoked or used as the read-only health subflow of an
+authorized `shopops-onboard` request. This is a read-only
 WP1 diagnostic: never install, repair, delete, enroll, pair, or change runtime
 state. Do not inspect, scan, connect, or execute a business project. Dashboard
 discovery belongs to the separate explicit project-onboarding step in

@@ -61,7 +61,8 @@ jobs:
           Start-Sleep -Milliseconds 500
           $pidPath = Join-Path $reporterHome "reporter.pid"
           if (Test-Path $pidPath) {
-            $daemonPid = [int](Get-Content $pidPath)
+            $processRecord = Get-Content -Raw $pidPath | ConvertFrom-Json
+            $daemonPid = [int]$processRecord.pid
             Get-Process -Id $daemonPid -ErrorAction SilentlyContinue | Format-List Id, ProcessName, HasExited
             $nativeProbe = "from shopops_reporter.daemon import process_running; print(process_running($daemonPid))"
             & $runtimePython -c $nativeProbe
@@ -74,6 +75,8 @@ jobs:
             Get-Content (Join-Path $reporterHome "reporter.log") -ErrorAction SilentlyContinue
             throw "Reporter daemon is not running"
           }
+          & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\native_reporter_acceptance.py")
+          if ($LASTEXITCODE -ne 0) { throw "Guided onboarding acceptance failed" }
           & $shim stop
           if ($LASTEXITCODE -ne 0) { throw "Reporter daemon did not stop" }
           Pop-Location

@@ -56,3 +56,34 @@ def test_doctor_does_not_run_potentially_mutating_status_from_an_older_runtime()
     assert version_check in text
     assert skip_status in text
     assert text.index(version_check) < text.index(skip_status) < text.index(status)
+
+
+def test_guided_entrypoint_routes_existing_skills_and_gates_unreleased_runtime():
+    text = onboard_skill_text()
+    assert "single entrypoint" in text
+    assert "installation-only request" in text
+    assert "guided_onboarding: 1" in text
+    assert "bundled 0.4.2 wheels do not contain it" in text
+    assert "shopops-doctor" in text and "shopops-update" in text
+    assert "guided-onboarding.md" in text
+
+
+def test_guided_reference_preserves_scope_evidence_and_individual_run_authorization():
+    text = (PLUGIN_ROOT / "references/guided-onboarding.md").read_text(encoding="utf-8")
+    for required in (
+        "onboarding discover --path", "onboarding prepare", "--scope-digest",
+        "--confirm-digest", "onboarding check", "onboarding status",
+        "--experienced", "batch_run is false", "frozen contract",
+        "source scope", "one material question", "Never clear the queue",
+        ".shopops/tasks/<task-key>/", "Only fresh server evidence",
+        "separately authorized run plan", "Output-only", "completed",
+        "partial", "no_change", "failed",
+    ):
+        assert required in text
+
+
+def test_contract_subflow_uses_selected_task_and_retains_submission_receipt():
+    text = (PLUGIN_ROOT / "skills/shopops-result-contract/SKILL.md").read_text(encoding="utf-8")
+    assert "--task <task-key>" in text
+    assert "onboarding preview --operation submit" in text
+    assert "Sample fixture paths remain relative to the source" in text

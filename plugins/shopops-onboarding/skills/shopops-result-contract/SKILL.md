@@ -3,7 +3,8 @@ name: shopops-result-contract
 description: Analyze an explicitly selected external SOP project, draft and validate its ShopOps result contract, and submit the confirmed immutable contract for administrator review.
 ---
 
-Act only when the developer explicitly invokes this skill for a specific project. This skill extends
+Act when explicitly invoked for a selected project or routed from an authorized
+`shopops-onboard` session for that task. This skill extends
 `shopops-onboarding`; it does not create a second plugin and it never executes business code.
 
 ## Safety boundary
@@ -21,7 +22,16 @@ Act only when the developer explicitly invokes this skill for a specific project
 
 ## Contract workflow
 
-1. Verify `shopops-report --json status` reports Reporter `0.3.0` or newer and locate the existing
+In a guided session, use its confirmed source root and task key. Named-task
+declarations are in `.shopops/tasks/<task-key>/`; pass `--task <task-key>` to
+every contract command. Sample fixture paths remain relative to the source
+root. The default task retains the legacy paths and omits `--task`.
+For guided submission use `onboarding preview --operation submit` and apply its
+confirmed digest, so the session retains the receipt and review state. Direct
+contract submission below remains available outside a guided session.
+
+1. For contract v2 verify Reporter `0.5.0` or newer and server capability
+   `result_contract_schemas` includes `shopops.result_contract.v2`. Locate the existing
    `.shopops/integration.yaml`. If the Reporter is older, stop and direct the developer to invoke
    `$shopops-update`; do not update it from this skill.
 2. Inspect the allowed project files and identify:
@@ -31,14 +41,21 @@ Act only when the developer explicitly invokes this skill for a specific project
    - a short headline, optional description, bounded metrics and details;
    - material completion claims and the log or artifact evidence supporting each claim;
    - full artifacts that should remain available in ShopOps.
-3. Ask the developer about every ambiguous status, field meaning, unit, privacy class, or completion
-   rule. Never infer a business failure from a field name or from exit code zero.
+3. Propose meanings using source evidence; ask one material question at a time
+   for ambiguous status, units, privacy or completion rules. Never infer a
+   business failure from a field name or from exit code zero. Missing output is
+   handled by the main guide's separately previewed output-only code changes.
 4. Present the proposed contract before writing. Use stable English keys and separate Chinese labels.
    Every metric, detail, claim, and artifact must declare exactly one visibility:
    `public`, `internal`, `sensitive`, or `forbidden`. Sensitive and forbidden values are never included
    in the mapped run result.
-5. After explicit confirmation, write `.shopops/result-contract.yaml` with schema
-   `shopops.result_contract.v1`. Use only normalized project-relative sources of type `json`, `csv`,
+5. After confirmation, draft schema `shopops.result_contract.v2`. For a new project use
+   `.shopops/result-contract.yaml`; for an existing active contract use a separate candidate.
+   Require `business_meaning` stating the population, calculation rules and completion conditions.
+   Copy `reporting_policy` from the current task configuration: working_directory, result_json,
+   artifacts, html_reports, dashboard, diagnostics and ai_readable_artifacts, including defaults.
+   Do not include project_fingerprint, script_version or fingerprint in the v2 body. Reporter
+   records source metadata separately. Use only normalized project-relative sources of type `json`, `csv`,
    `xlsx`, or bounded `text`. JSON selectors are RFC 6901 pointers; tabular selectors are exact column
    names; text selectors are limited to `text`, `line_count`, or `contains:<literal>`.
 6. Add four sanitized fixtures under `.shopops/result-samples/` covering `completed`, `partial`,
@@ -48,11 +65,27 @@ Act only when the developer explicitly invokes this skill for a specific project
    validation failures without weakening the privacy boundary. Then run
    `shopops-report --json result-contract preview --project-dir <project-root>` only if current output
    files are explicitly approved for local inspection. Preview does not upload the output.
-8. Show the exact contract digest, project fingerprint, fields, completion mapping, warnings, and
+8. Show the exact contract digest, separately recorded code fingerprint, business meaning,
+   reporting policy, fields, completion mapping, warnings, and
    sample coverage. Wait for explicit confirmation of that digest before submission.
 9. Submit with `shopops-report --json result-contract submit --project-dir <project-root>`. Report the
    returned immutable version and `pending` review status. The project may run while pending, but its
    results are marked unverified until a ShopOps administrator approves that exact version.
 
-When project source or result shape changes, create and submit a new contract version. Never overwrite
-or claim to amend an already submitted version.
+Source-only edits automatically reuse an approved v2 contract. Extra unreferenced output fields
+are ignored, never automatically uploaded. Change the contract version when business meaning,
+field definitions, mappings, evidence rules or reporting scope changes. Shape compatibility
+does not prove unchanged business meaning; the developer maintains that declaration.
+Never overwrite or claim to amend an already submitted version.
+
+For a `shopops.result_contract.v1` project, use `result-contract migrate-schema --to v2` to generate a candidate only.
+It requires server capability before writing, preserves the active v1 file, and leaves
+business_meaning empty for developer confirmation. Do not use migrate-fingerprint as a schema
+migration. Use `--contract-file <candidate>` for validate, preview and submit, retaining the task
+argument. Submission atomically switches the configuration's result_contract.file reference to
+a versioned local file; old files are retained. Read that active reference on later visits.
+The new version needs one administrator review. Old runtime/server combinations stay on v1;
+do not silently fall back when v2 is requested. v2 pending runs remain unverified even if
+approval happens later. A mapping error must not be called verified merely because the process
+exited successfully. A separate migration submission retains its own receipt; refresh a guided
+session with onboarding check before creating another submit/run preview.

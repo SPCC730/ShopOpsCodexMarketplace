@@ -8,10 +8,13 @@ wheelhouse rather than reuse a different CPython ABI.
 
 ## Authorization
 
-The onboarding and doctor skills run only when explicitly invoked. Onboarding
+An explicit onboarding request can use doctor/update/contract subflows without
+requiring the developer to name each skill. Those subflows retain their own
+operation scope. Existing authorization for an unchanged concrete operation
+remains valid. Installation
 must run `probe` and `install-preview`, show the exact locked version and paths,
 then stop for explicit developer confirmation of that version before `install`.
-The original request is not confirmation. The installer uses the bundled
+An unversioned request is not exact-version confirmation. The installer uses the bundled
 wheelhouse with `pip --no-index`; it must not contact PyPI.
 
 Doctor is reporting-only. It can probe, validate the locked preview, inspect the
@@ -19,6 +22,13 @@ Reporter runtime and stable shim, and request `--json status`; it must never
 install, repair, remove, enroll, pair, or otherwise alter Reporter state.
 
 ## Scope
+
+The unified guided workflow is unreleased and capability-gated; bundled 0.4.2
+does not provide it. Its confirmed local scope may be analyzed and configured
+as described in [guided-onboarding.md](guided-onboarding.md). Output-only edits,
+contract submission and an individual real run have distinct concrete plans.
+Batch onboarding never authorizes batch execution. Completion requires fresh
+server evidence for the session's run, frozen contract and required artifacts.
 
 WP1 never scans, connects to, or executes a business project. It includes no
 MCP service, UI, browser extension, lifecycle hook, device enrollment, Reporter

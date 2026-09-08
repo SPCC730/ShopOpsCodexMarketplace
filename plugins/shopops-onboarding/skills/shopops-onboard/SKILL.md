@@ -1,12 +1,29 @@
 ---
 name: shopops-onboard
-description: Handle an explicitly invoked WP1 request to onboard a local script project to ShopOps Reporter; do not use for general ShopOps assistance.
+description: Guide a developer who asks to onboard local scripts or a folder to ShopOps Reporter, including explicitly invoked installation, task selection, result contracts and resuming onboarding.
 ---
 
-Act only after the developer explicitly invokes this skill. The installation part
-is WP1 and installs the local Reporter runtime only. A separate, explicitly
-requested project-onboarding step may read the selected project for existing
-ShopOps declarations; it never executes business code or connects to a dashboard.
+Use this as the single entrypoint when the developer asks to onboard to ShopOps
+or provides a local script/folder for that purpose. A path alone in an unrelated
+conversation is not an onboarding request. Installation-only requests still stop
+after runtime health reporting. Project onboarding continues using
+[the guided workflow](../../references/guided-onboarding.md).
+Configuration does not authorize business execution; each real run retains its
+own concrete task and command confirmation.
+
+Start with the requested path and current runtime health. Reuse a healthy
+installation and existing pairing. Use `shopops-doctor` for the read-only health
+subflow and `shopops-update` when an update is needed; the developer need not
+memorize or invoke each subskill. Existing authorization for the same concrete
+operation remains valid; ask only for missing scope or a new operation.
+
+The guided workflow is **unreleased** and requires local capability
+`guided_onboarding: 1` and server `task_profiles: 1` / `onboarding_verification: 1`.
+The bundled 0.4.2 wheels do not contain it. Check capabilities before preparing
+tasks; report `upgrade_required` if unavailable. Do not create named-task files
+with an older runtime or install an unpublished build as a fallback.
+
+## Installation When Needed
 
 1. From the installed plugin directory, run the helper with an available Python
    interpreter. On macOS use
@@ -23,8 +40,8 @@ ShopOps declarations; it never executes business code or connects to a dashboard
    needed. Explain that the installer uses `pip --no-index` and never contacts
    PyPI.
 3. Show the complete preview, including the version and paths. 等待开发者明确确认
-   the exact previewed version before running any install command. Do not infer
-   confirmation from the original request or from a prior confirmation.
+   the exact previewed version before running any install command. A prior
+   confirmation applies only if this exact version and operation were authorized.
 4. Only after that confirmation, run `shopops_plugin_helper install
    --confirm-version <previewed-version> --json` with the same helper interpreter
    and `PYTHONPATH` selected in step 1.
@@ -35,13 +52,15 @@ ShopOps declarations; it never executes business code or connects to a dashboard
    result is a valid installed-but-unpaired state; do not enroll or pair a device
    in WP1.
 
-Stop after installation and health reporting. For safety, cleanup is a separate
+For an installation-only request, stop after installation and health reporting.
+For project onboarding, continue the guided workflow once its capabilities are
+available. Cleanup is a separate
 explicit operation outside WP1 and must first preview affected runtime versions,
 device identity, queued runs, and projects before confirmation. Removing this
 Codex plugin does not remove Reporter, its device identity, queue, or project
 launch capability. See [the security policy](../../references/security-policy.md).
 
-## Project dashboard discovery (explicit request only)
+## Project Dashboard Discovery
 
 When the developer explicitly asks to onboard a project after WP1 is healthy,
 first confirm the working directory is the intended project. Read only
@@ -66,7 +85,8 @@ or fragment, and points to a private/loopback address. Explain that a service
 must listen on a LAN interface (`0.0.0.0` or the developer's LAN IP) for the
 ShopOps Run Center to open it. Show the candidate and its exact source, then
 wait for confirmation before writing `.shopops/dashboard.json` or running
-`shopops-report init`. Do not modify business scripts. If the service is only
+`shopops-report init`. Output-only script changes belong to the separately
+previewed guided workflow. If the service is only
 bound to loopback, report that it is not reachable from Run Center rather than
 publishing an unusable URL.
 

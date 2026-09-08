@@ -3,7 +3,8 @@ name: shopops-update
 description: Handle an explicitly invoked request to safely update ShopOps Reporter while preserving local device and project state; do not use for initial installation or general diagnostics.
 ---
 
-Act only after the developer explicitly invokes this skill. Update one Reporter
+Act when explicitly invoked or when `shopops-onboard` identifies a required
+update during an authorized onboarding request. Update one Reporter
 installation on the current computer. Never update another machine, run business
 scripts, re-enroll the device, or change project business code.
 
@@ -29,9 +30,9 @@ scripts, re-enroll the device, or change project business code.
    - preserves device identity, `.shopops` project configuration, project
      registry, old runtime, and offline queue;
    - does not re-pair, re-upload, modify, synchronize, or run a project.
-5. Wait for explicit confirmation of the exact locked target version. Do not
-   treat the original request, a previous confirmation, or an unversioned
-   confirmation as approval.
+5. Wait for explicit confirmation of the exact locked target version. Reuse
+   existing authorization only when it covers this exact version and update;
+   an unversioned request is not approval for an arbitrary target.
 6. After confirmation, run `shopops_plugin_helper install --confirm-version
    <locked-version> --json` with the same interpreter and `PYTHONPATH`. Do not
    use PyPI or substitute another version. If installation fails, preserve the
@@ -49,6 +50,14 @@ scripts, re-enroll the device, or change project business code.
 Removing or updating this Codex plugin does not remove Reporter, its device
 identity, queue, or project launch capability. Reporter cleanup is a separate
 explicit operation and must preview all affected state before confirmation.
+
+Reporter 0.5.0 adds contract schema v2. Deploy a backend advertising that schema first.
+An upgrade preserves v1 contracts; it does not migrate or submit them. Migration is a separate
+`result-contract migrate-schema --to v2` operation that creates a candidate and requires one
+administrator review after submission. Ordinary source changes then reuse the approved v2
+contract automatically; business meaning, mapping and reporting scope changes need a new version.
+Never install a candidate build merely because this skill describes its capabilities; use the
+published checksum-locked release selected by the installer.
 
 Reporter 0.4.0 adds independent project metadata synchronization and current-device
 ownership. Deploy a compatible ShopOps backend first. Existing YAML stays readable;

@@ -1,14 +1,18 @@
 # ShopOps Codex Marketplace
 
 公开的 ShopOps Codex 插件分发仓库。当前发布的
-`shopops-onboarding 0.1.12+codex.20260908065549` 用于安全安装、更新和诊断
-`ShopOps Reporter 0.4.2`，并提供经确认的项目接入和运行结果契约配置指引。
+`shopops-onboarding 0.1.12+codex.20260908085450` 用于安全安装、更新和诊断
+`ShopOps Reporter 0.5.0`，并提供经确认的项目接入和运行结果契约配置指引。
 
 Reporter 0.4.2 于 2026-09-08 发布，开发者安装分支为
 `codex/shopops-plugin-dev`。插件版本与 Reporter 版本分别管理，更新插件不会
 自动升级本机 Reporter。
 
 版本及安装包校验依据：
+
+Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约，业务口径、
+映射和上报范围变化才提交新版本。现有 v1 项目需要一次迁移审核；升级不会自动迁移。
+当前正式离线分发为 0.5.0。
 
 - [插件版本](plugins/shopops-onboarding/.codex-plugin/plugin.json)
 - [Reporter 分发清单](plugins/shopops-onboarding/reporter-manifest.json)
