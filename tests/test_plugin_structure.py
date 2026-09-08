@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import tomllib
 
 import yaml
@@ -12,6 +13,18 @@ SKILL_SCOPES = {
     "shopops-doctor": "diagnose",
     "shopops-update": "update",
 }
+
+
+def test_readme_release_versions_match_distribution_manifests():
+    readme = Path("README.md").read_text(encoding="utf-8")
+    plugin = json.loads((PLUGIN_ROOT / ".codex-plugin/plugin.json").read_text())
+    reporter = json.loads((PLUGIN_ROOT / "reporter-manifest.json").read_text())
+    versions = {entry["reporter_version"] for entry in reporter["wheelhouses"]}
+
+    assert len(versions) == 1
+    assert re.findall(r"`ShopOps Reporter ([^`]+)`", readme) == [versions.pop()]
+    assert re.findall(r"`shopops-onboarding ([^`]+)`", readme) == [plugin["version"]]
+    assert "--ref codex/shopops-plugin-dev" in readme
 
 
 def test_marketplace_exposes_only_the_expected_plugin_with_approved_policy():
