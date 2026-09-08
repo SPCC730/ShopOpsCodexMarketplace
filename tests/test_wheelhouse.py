@@ -362,11 +362,12 @@ def test_wheelhouse_contains_reporter_and_verified_dependencies(platform_name, a
 
     assert files
     assert list(files) == sorted(files)
-    assert any(name.startswith("shopops_reporter-0.4.1-") for name in files)
+    assert any(name.startswith("shopops_reporter-0.4.2-") for name in files)
     assert any(name.startswith("psutil-") for name in files)
     reporter_path = next(path for name, (path, _) in files.items() if name.startswith("shopops_reporter-"))
     with ZipFile(reporter_path) as wheel:
-        assert '__version__ = "0.4.1"' in wheel.read("shopops_reporter/__init__.py").decode()
+        assert '__version__ = "0.4.2"' in wheel.read("shopops_reporter/__init__.py").decode()
+        assert '"/reporter/v1/devices/self/heartbeat"' in wheel.read("shopops_reporter/daemon.py").decode()
         assert "shopops_reporter/daemon_control.py" in wheel.namelist()
         assert "shopops_reporter/fingerprint.py" in wheel.namelist()
     assert all(name.endswith(".whl") for name in files)

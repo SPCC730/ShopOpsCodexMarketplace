@@ -1,6 +1,6 @@
 {
   "name": "shopops-onboarding",
-  "version": "0.1.12+codex.20260908070000",
+  "version": "0.1.12+codex.20260908065549",
   "description": "Safely connect local script projects to ShopOps Reporter.",
   "author": {
     "name": "ShopOps"
