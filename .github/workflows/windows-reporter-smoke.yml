@@ -8,6 +8,7 @@ jobs:
   windows-reporter:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
@@ -29,11 +30,21 @@ jobs:
         run: |
           $pluginRoot = Join-Path $PWD "plugins\shopops-onboarding"
           $env:PYTHONPATH = Join-Path $pluginRoot "tools"
-          $env:LOCALAPPDATA = Join-Path $env:RUNNER_TEMP "local-app-data"
           Push-Location $pluginRoot
-          $preview = python -m shopops_plugin_helper install-preview --json | ConvertFrom-Json
+          $install = @'
+          from dataclasses import asdict
+          import json, sys
+          from pathlib import Path
+          from shopops_plugin_helper.environment import probe_environment
+          from shopops_plugin_helper.installer import default_reporter_home, install_preview, install_reporter
+          probe = probe_environment([sys.executable])
+          preview = install_preview(Path.cwd(), default_reporter_home(), probe)
+          result = install_reporter(Path.cwd(), default_reporter_home(), probe)
+          assert result.version == preview.version
+          print(json.dumps({'install': asdict(result)}))
+          '@
+          $preview = python -c $install | ConvertFrom-Json
           if (-not $preview.install.version) { throw "Missing Reporter preview version" }
-          python -m shopops_plugin_helper install --confirm-version $preview.install.version --json
           $shim = Join-Path $env:LOCALAPPDATA "ShopOps\Reporter\bin\shopops-report.cmd"
           & $shim --json status
           if ($LASTEXITCODE -ne 2) { throw "Expected unpaired Reporter status" }
@@ -43,6 +54,8 @@ jobs:
           assert split_command('"C:\\Program Files\\Python311\\python.exe" task.py') == [r'C:\Program Files\Python311\python.exe', 'task.py']
           '@
           $runtimePython = Join-Path $preview.install.runtime_dir "venv\Scripts\python.exe"
+          & $runtimePython -c "import sys; assert '.'.join(map(str, sys.version_info[:2])) == '${{ matrix.python-version }}'; print(sys.version)"
+          if ($LASTEXITCODE -ne 0) { throw "Runtime Python does not match matrix" }
           & $runtimePython -c $parserCheck
 
           $reporterHome = Join-Path $env:LOCALAPPDATA "ShopOps\Reporter"

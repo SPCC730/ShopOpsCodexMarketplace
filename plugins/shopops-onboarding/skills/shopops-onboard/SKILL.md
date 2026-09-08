@@ -17,9 +17,9 @@ subflow and `shopops-update` when an update is needed; the developer need not
 memorize or invoke each subskill. Existing authorization for the same concrete
 operation remains valid; ask only for missing scope or a new operation.
 
-The guided workflow is **unreleased** and requires local capability
+The guided workflow ships in Reporter 0.5.x and requires local capability
 `guided_onboarding: 1` and server `task_profiles: 1` / `onboarding_verification: 1`.
-The bundled 0.4.2 wheels do not contain it. Check capabilities before preparing
+The bundled 0.5.1 wheels contain it. Check capabilities before preparing
 tasks; report `upgrade_required` if unavailable. Do not create named-task files
 with an older runtime or install an unpublished build as a fallback.
 

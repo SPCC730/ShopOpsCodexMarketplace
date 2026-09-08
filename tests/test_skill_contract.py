@@ -58,12 +58,12 @@ def test_doctor_does_not_run_potentially_mutating_status_from_an_older_runtime()
     assert text.index(version_check) < text.index(skip_status) < text.index(status)
 
 
-def test_guided_entrypoint_routes_existing_skills_and_gates_unreleased_runtime():
+def test_guided_entrypoint_routes_existing_skills_and_gates_runtime_capabilities():
     text = onboard_skill_text()
     assert "single entrypoint" in text
     assert "installation-only request" in text
     assert "guided_onboarding: 1" in text
-    assert "bundled 0.4.2 wheels do not contain it" in text
+    assert "bundled 0.5.1 wheels contain it" in text
     assert "shopops-doctor" in text and "shopops-update" in text
     assert "guided-onboarding.md" in text
 
