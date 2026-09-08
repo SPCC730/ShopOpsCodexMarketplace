@@ -1,7 +1,7 @@
 # ShopOps Codex Marketplace
 
 公开的 ShopOps Codex 插件分发仓库。当前发布的
-`shopops-onboarding 0.1.12+codex.20260908085450` 用于安全安装、更新和诊断
+`shopops-onboarding 0.1.12+codex.20260908093755` 用于安全安装、更新和诊断
 `ShopOps Reporter 0.5.0`，并提供经确认的项目接入和运行结果契约配置指引。
 
 Reporter 0.4.2 于 2026-09-08 发布，开发者安装分支为
