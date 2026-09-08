@@ -55,6 +55,8 @@ def powershell(script, env=None):
 
 
 def main():
+    if not os.environ.get("GITHUB_ACTIONS") and not os.environ.get("SHOPOPS_REPORTER_HOME"):
+        raise RuntimeError("Set SHOPOPS_REPORTER_HOME to an isolated test directory")
     # macOS exposes /tmp through a symlink; discovery intentionally rejects
     # symlinked ancestors, so keep the fixture under the real workspace path.
     fixture_parent = Path.cwd() / ".acceptance-tmp"
