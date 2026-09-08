@@ -1,10 +1,10 @@
 # ShopOps Codex Marketplace
 
 公开的 ShopOps Codex 插件分发仓库。当前发布的
-`shopops-onboarding 0.1.11+codex.20260908023555` 用于安全安装、更新和诊断
-`ShopOps Reporter 0.4.0`，并提供经确认的项目接入和运行结果契约配置指引。
+`shopops-onboarding 0.1.12+codex.20260908070000` 用于安全安装、更新和诊断
+`ShopOps Reporter 0.4.1`，并提供经确认的项目接入和运行结果契约配置指引。
 
-Reporter 0.4.0 于 2026-09-08 发布，开发者安装分支为
+Reporter 0.4.1 于 2026-09-08 发布，开发者安装分支为
 `codex/shopops-plugin-dev`。插件版本与 Reporter 版本分别管理，更新插件不会
 自动升级本机 Reporter。
 
@@ -13,7 +13,6 @@ Reporter 0.4.0 于 2026-09-08 发布，开发者安装分支为
 - [插件版本](plugins/shopops-onboarding/.codex-plugin/plugin.json)
 - [Reporter 分发清单](plugins/shopops-onboarding/reporter-manifest.json)
 - [安装包 SHA-256](plugins/shopops-onboarding/checksums.json)
-- [0.4.0 发布记录](https://github.com/SPCC730/ShopOpsCodexMarketplace/commit/7f50e54d3e0d077e7ac3a384249075ccd7884351)
 
 完整交互式说明书：
 
@@ -21,6 +20,30 @@ Reporter 0.4.0 于 2026-09-08 发布，开发者安装分支为
 - ShopOps Mac mini 本机：<http://127.0.0.1:5174>
 
 ## 开发者 5 分钟开始
+
+### Reporter 0.4.1 更新说明
+
+- 修复运行输出 JSON 变化造成项目指纹失配的问题，提供显式的 v2 输出路径声明及一次性迁移。
+- 后台状态同时验证进程身份、启动时间和本机健康接口；增加单实例锁，停止时通过带凭证的本机接口退出。
+- 新运行保存结果契约快照；项目配置原子写入。原项目身份、旧契约与离线队列保留。
+- 八套离线包覆盖 macOS arm64、Windows x64 的 CPython 3.11–3.14，均包含 `psutil`。
+
+管理员先部署支持 v2 指纹契约的 ShopOps 后端。开发者更新本插件后，在新 Codex 任务中
+调用 `$shopops-update` 升级到 **0.4.1**。插件更新本身不会升级 Reporter，也不会重启旧后台。
+旧后台仅有 PID 标记时，新版将显示 `legacy_unverified`；需从原启动终端或服务管理器
+确认并正常停止旧进程，再启动新版，不能仅凭 PID 结束其他程序。
+
+升级不会自动转换旧项目的指纹。确认输出范围、暂停新增业务运行后，在原项目目录执行：
+
+```bash
+shopops-report result-contract migrate-fingerprint --output data/result.json
+```
+
+路径只是示例，必须按实际项目列出动态输出文件；多个文件重复使用 `--output`。
+不允许整个 `data/`、通配符或源码路径，也不能把业务输入配置当作输出。
+此命令会提交新契约并保留旧契约备份，不执行业务脚本；新版本需管理员审核。
+迁移后源码、业务配置和契约规则的变化仍需更新契约。历史结果的校验状态不回填，
+已有离线记录继续使用原版本。详细步骤见在线说明书的“项目指纹迁移与后台状态”。
 
 ### 1. 确认仓库可访问
 

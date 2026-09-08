@@ -3,8 +3,8 @@
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "backports.tarfile-1.2.0-py3-none-any.whl",
@@ -71,6 +71,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl",
+          "sha256": "1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -79,8 +83,8 @@
           "sha256": "652cb6edd41e718550aad172851962662ff2681490a8a711af6a4d288dd96824"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -93,13 +97,13 @@
       ],
       "platform": "macos-arm64",
       "python": "311",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -158,6 +162,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl",
+          "sha256": "1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -166,8 +174,8 @@
           "sha256": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -176,13 +184,13 @@
       ],
       "platform": "macos-arm64",
       "python": "312",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -241,6 +249,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl",
+          "sha256": "1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -249,8 +261,8 @@
           "sha256": "2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -259,13 +271,13 @@
       ],
       "platform": "macos-arm64",
       "python": "313",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -324,6 +336,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp36-abi3-macosx_11_0_arm64.whl",
+          "sha256": "1a7b04c10f32cc88ab39cbf606e117fd74721c831c98a27dc04578deb0c16979"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -332,8 +348,8 @@
           "sha256": "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -342,13 +358,13 @@
       ],
       "platform": "macos-arm64",
       "python": "314",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "backports.tarfile-1.2.0-py3-none-any.whl",
@@ -415,6 +431,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp37-abi3-win_amd64.whl",
+          "sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -427,8 +447,8 @@
           "sha256": "9f3bfb4965eb874431221a3ff3fdcddc7e74e3b07799e0e84ca4a0f867d449bf"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -441,13 +461,13 @@
       ],
       "platform": "windows-x64",
       "python": "311",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -506,6 +526,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp37-abi3-win_amd64.whl",
+          "sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -518,8 +542,8 @@
           "sha256": "5fcd34e47f6e0b794d17de1b4ff496c00986e1c83f7ab2fb8fcfe9616ff7477b"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -528,13 +552,13 @@
       ],
       "platform": "windows-x64",
       "python": "312",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -593,6 +617,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp37-abi3-win_amd64.whl",
+          "sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -605,8 +633,8 @@
           "sha256": "79005a0d97d5ddabfeeea4cf676af11e647e41d81c9a7722a193022accdb6b7c"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -615,13 +643,13 @@
       ],
       "platform": "windows-x64",
       "python": "313",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     },
     {
       "files": [
         {
-          "name": "anyio-4.15.0-py3-none-any.whl",
-          "sha256": "7ecd9937369ffce8bba0b5ccb9b3a9507b101b0ed50256aecfbab27e6c2acb99"
+          "name": "anyio-4.15.1-py3-none-any.whl",
+          "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
         },
         {
           "name": "certifi-2026.7.22-py3-none-any.whl",
@@ -680,6 +708,10 @@
           "sha256": "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
         },
         {
+          "name": "psutil-7.2.2-cp37-abi3-win_amd64.whl",
+          "sha256": "eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988"
+        },
+        {
           "name": "pycparser-3.0-py3-none-any.whl",
           "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"
         },
@@ -692,8 +724,8 @@
           "sha256": "4a2e8cebe2ff6ab7d1050ecd59c25d4c8bd7e6f400f5f82b96557ac0abafd0ac"
         },
         {
-          "name": "shopops_reporter-0.4.0-py3-none-any.whl",
-          "sha256": "ef682cf066e40efad5ab984084d8eaf2df9b4ad59b57446b704869e13ceef44d"
+          "name": "shopops_reporter-0.4.1-py3-none-any.whl",
+          "sha256": "ea2579dbece6efb01991bb6b377be25802781caa7a6be6f408ca2e473255d5d3"
         },
         {
           "name": "typing_extensions-4.16.0-py3-none-any.whl",
@@ -702,7 +734,7 @@
       ],
       "platform": "windows-x64",
       "python": "314",
-      "reporter_version": "0.4.0"
+      "reporter_version": "0.4.1"
     }
   ]
 }
