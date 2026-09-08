@@ -59,6 +59,14 @@ discovery belongs to the separate explicit project-onboarding step in
    - `healthy`: the current runtime and shim are healthy, match the previewed
      version, and status succeeds.
 
+For Reporter 0.4.0+, separately report each registered project's cached `sync`
+state. `failed`, `unsupported_server`, and `pending_migration` are not successful
+project synchronization, even when the runtime itself is healthy. Use the cached
+association, device, scan status and freshness only; do not run `sync` or scan
+project files. A fresh project heartbeat does not make an old scan current.
+For pending migration, explain that the old scripts/schedules must be stopped
+and uploads drained before administrator activation. Do not perform migration.
+
 Include the probe, preview, inspected shim/target, and status evidence in the
 report. Offer no silent repair or install; an install requires the separate
 `shopops-onboard` preview-and-confirmation workflow. Reporter cleanup is a

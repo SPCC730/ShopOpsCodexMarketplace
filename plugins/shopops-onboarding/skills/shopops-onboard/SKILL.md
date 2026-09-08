@@ -69,3 +69,28 @@ wait for confirmation before writing `.shopops/dashboard.json` or running
 `shopops-report init`. Do not modify business scripts. If the service is only
 bound to loopback, report that it is not reachable from Run Center rather than
 publishing an unusable URL.
+
+## Project metadata and device ownership (Reporter 0.4.0+)
+
+During an explicitly requested project onboarding, propose `display_name`,
+`description`, optional `project_version`, and `run_mode` in the existing
+`.shopops/integration.yaml`. Use project evidence and developer confirmation;
+do not infer `manual` from an empty scan. Leave the mode `unknown` unless manual
+or scheduled execution is established. Do not include secrets in these fields.
+Preserve `project_key`, `integration_id`, descriptor and device identity across
+ordinary code changes. The administrator-owned SOP name is independent of the
+project name. One SOP uses either internal or external execution, not both.
+
+After an authorized metadata change, `shopops-report --json sync --project-dir .`
+reports the actual outcome. The running daemon independently synchronizes
+registered project metadata every 60 seconds; `--json status` reads cached results
+without contacting projects or the server. Upload policy/dashboard changes still
+need explicit sync; result contract changes still need separate reviewed submission.
+Do not treat an unsupported server or failed scan as a successful empty schedule.
+
+Moving the original project configuration to another paired computer requests
+`pending_migration`, not immediate upload permission. Keep the original project
+identity. Have the developer stop the old scripts and task schedules and drain
+the old upload queue before the administrator activates the new device in External
+Access. This confirmation is not proof of remote process termination; never claim
+that ShopOps stopped the old computer. Historical runs and other projects remain.

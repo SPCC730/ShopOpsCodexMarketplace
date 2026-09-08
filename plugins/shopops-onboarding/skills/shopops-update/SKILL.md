@@ -49,3 +49,12 @@ scripts, re-enroll the device, or change project business code.
 Removing or updating this Codex plugin does not remove Reporter, its device
 identity, queue, or project launch capability. Reporter cleanup is a separate
 explicit operation and must preview all affected state before confirmation.
+
+Reporter 0.4.0 adds independent project metadata synchronization and current-device
+ownership. Deploy a compatible ShopOps backend first. Existing YAML stays readable;
+missing metadata is unknown, not a reason to reset project identity. The running
+daemon synchronizes declared metadata without a business run. The update workflow
+does not start it or edit project metadata. Explain `unsupported_server`, failed
+sync and `pending_migration` separately from runtime health, using cached status.
+An upgrade never authorizes device migration, local task termination, or SOP
+execution-mode replacement.
