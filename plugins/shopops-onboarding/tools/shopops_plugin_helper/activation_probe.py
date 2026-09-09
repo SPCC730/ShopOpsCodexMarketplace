@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 import tempfile
 from pathlib import Path
 
@@ -22,6 +23,7 @@ def inspect() -> dict:
     from shopops_reporter.config import reporter_home
     from shopops_reporter.daemon_control import (
         inspect_daemon,
+        is_reporter_command,
         process_identity,
         read_marker,
     )
@@ -41,13 +43,25 @@ def inspect() -> dict:
                 import psutil
                 # macOS framework Python rewrites argv[0] to the system
                 # executable; its venv launcher remains in this one variable.
-                executable = psutil.Process(daemon["pid"]).environ().get("__PYVENV_LAUNCHER__") or command[0]
-                # Resolve directory aliases (/var vs /private/var), but never
-                # resolve the python symlink itself out of its virtualenv.
-                invoked = Path(executable)
-                relative = (invoked.parent.resolve() / invoked.name).relative_to(reporter_home().resolve() / "runtime")
-                if len(relative.parts) == 4 and tuple(p.lower() for p in relative.parts[1:3]) in (("venv", "bin"), ("venv", "scripts")):
-                    daemon["runtime_version"] = relative.parts[0]
+                running = psutil.Process(daemon["pid"])
+                candidates = [running.environ().get("__PYVENV_LAUNCHER__") or command[0]]
+                # Windows 3.11/3.12's venv redirector remains the immediate
+                # parent while base Python hosts the authenticated daemon.
+                # Require an actual Reporter invocation in that parent too.
+                if sys.platform == "win32":
+                    parent = running.parent()
+                    if parent and parent.create_time() <= process["created_at"] and is_reporter_command(parent.cmdline()):
+                        candidates.append(parent.cmdline()[0])
+                for executable in candidates:
+                    invoked = Path(executable)
+                    try:
+                        # Resolve directory aliases, not the python symlink.
+                        relative = (invoked.parent.resolve() / invoked.name).relative_to(reporter_home().resolve() / "runtime")
+                    except ValueError:
+                        continue
+                    if len(relative.parts) == 4 and tuple(p.lower() for p in relative.parts[1:3]) in (("venv", "bin"), ("venv", "scripts")):
+                        daemon["runtime_version"] = relative.parts[0]
+                        break
             except (IndexError, ValueError, psutil.Error):
                 pass
     entries = []
@@ -86,12 +100,19 @@ def inspect() -> dict:
 
 def stop_authenticated() -> dict:
     import psutil
-    from shopops_reporter.daemon_control import inspect_daemon, request_daemon_stop
+    from shopops_reporter.daemon_control import (
+        inspect_daemon,
+        is_reporter_command,
+        request_daemon_stop,
+    )
 
     state = inspect_daemon()
     if state["state"] != "healthy":
         raise RuntimeError("daemon_not_verified")
     process = psutil.Process(state["pid"])
+    redirector = process.parent() if sys.platform == "win32" else None
+    if redirector and not is_reporter_command(redirector.cmdline()):
+        redirector = None
     try:
         request_daemon_stop()
     except RuntimeError:
@@ -100,11 +121,12 @@ def stop_authenticated() -> dict:
         # termination; wait for this same process to finish naturally.
         pass
     process.wait(timeout=45)
+    if redirector:
+        redirector.wait(timeout=5)
     if inspect_daemon()["state"] not in {"stopped", "stale"}:
         raise RuntimeError("daemon_changed_during_stop")
     return {"stopped": True}
 
 
 if __name__ == "__main__":
-    import sys
     print(json.dumps(stop_authenticated() if sys.argv[1:] == ["stop"] else inspect()))
