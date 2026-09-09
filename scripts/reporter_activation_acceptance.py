@@ -52,6 +52,11 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
         assert repaired["install"]["changed"]
         assert repaired["activation"]["activation_verified"]
         assert not repaired["restarted"]
+        shim_python = home / "bin" / ("shopops-reporter-python.cmd" if os.name == "nt" else "shopops-reporter-python")
+        command = [shim_python, "-c", "import shopops_reporter; print(shopops_reporter.__version__)"]
+        if os.name == "nt":
+            command = ["cmd.exe", "/d", "/c", *command]
+        assert run(command, env).strip() == "0.7.0"
         assert python.exists()
         print(json.dumps({"python": sys.version.split()[0], "old_daemon": "0.6.0", "new_daemon": "0.7.0", "idempotent": True, "business_executed": False}))
     finally:

@@ -89,9 +89,12 @@ def install_reporter(
         runtime_dir / "venv" / layout.scripts_directory / layout.runtime_launcher_name
     )
     shim_path = reporter_home / "bin" / layout.shim_name
+    python_shim = reporter_home / "bin" / ("shopops-reporter-python.cmd" if layout.windows else "shopops-reporter-python")
+    runtime_python = reporter_binary.parent / layout.python_name
 
     if reporter_binary.is_file() and self_check(reporter_binary, locked.version):
         changed = _ensure_shim(shim_path, reporter_binary, layout)
+        changed = _ensure_shim(python_shim, runtime_python, layout) or changed
         return InstallResult(locked.version, str(runtime_dir), str(shim_path), changed)
 
     runtime_root.mkdir(parents=True, exist_ok=True)
@@ -121,6 +124,7 @@ def install_reporter(
         if not self_check(reporter_binary, locked.version):
             raise InstallError("final_self_check_failed")
         _ensure_shim(shim_path, reporter_binary, layout)
+        _ensure_shim(python_shim, runtime_python, layout)
     except Exception:
         if installed_runtime:
             _remove_path(runtime_dir)

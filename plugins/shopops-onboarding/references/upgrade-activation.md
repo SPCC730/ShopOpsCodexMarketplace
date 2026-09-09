@@ -8,6 +8,8 @@ Stable paths:
 - Windows: `%LOCALAPPDATA%\ShopOps\Reporter\bin\shopops-report.cmd`.
 - Standard `.shopops/run.command` and `run.ps1` already use those shims; their `windows-task-wrapper.ps1` forwards trigger context. Named tasks live under `.shopops/tasks/<task-key>/` and must retain `--task`.
 
+Reporter-owned Python adapters that already run under the managed Reporter runtime may use `~/.shopops-reporter/bin/shopops-reporter-python` (Windows: `%LOCALAPPDATA%\ShopOps\Reporter\bin\shopops-reporter-python.cmd`). The installer switches this interpreter shim together with the CLI shim, including an already-installed version repair. Keep the adapter script path and all arguments; verify its imports and call signatures without executing its business entrypoint. This is not a replacement for a business project virtualenv.
+
 Never use `runtime/0.6.0/venv/...` (or any versioned runtime) in a new permanent task action. PowerShell: `& $Reporter run ...`; batch: `call "...\bin\shopops-report.cmd" run ...` so exit-code propagation is preserved. Task Scheduler cannot directly treat a .cmd file as an executable: keep the existing PowerShell wrapper, or use cmd.exe with correct /d /s /c quoting after preview. Do not blindly substitute an exe with a cmd in a task XML Execute field.
 
 ## Inspection and repair
