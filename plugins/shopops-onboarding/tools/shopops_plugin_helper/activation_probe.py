@@ -51,6 +51,11 @@ def inspect() -> dict:
             except (IndexError, ValueError, psutil.Error):
                 pass
     entries = []
+    registry = reporter_home() / "projects.json"
+    declared_projects = json.loads(registry.read_text(encoding="utf-8")) if registry.exists() else []
+    if not isinstance(declared_projects, list) or any(not isinstance(p, str) for p in declared_projects):
+        raise ValueError("project_registry_invalid")
+    unavailable = [p for p in declared_projects if not Path(p).is_dir()]
     # This registry is explicit. Do not crawl source trees, logs or output files.
     for task in registered_tasks():
         with tempfile.TemporaryDirectory(prefix="shopops-launcher-template-") as folder:
@@ -72,6 +77,7 @@ def inspect() -> dict:
                 entries.append({"path": str(path), "task_key": task.task_key, "state": state})
     return {
         "installed_version": __version__, "daemon": daemon, "launchers": entries,
+        "unavailable_projects": unavailable,
         "scheduler_actions": "review_required",
         "shell_path": "review_required",
         "project_python_imports": "review_required",

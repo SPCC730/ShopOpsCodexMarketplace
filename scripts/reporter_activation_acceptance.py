@@ -30,6 +30,8 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
     wheels = plugin / "wheelhouse" / platform_key(probe.os_name, probe.architecture) / f"cp{sys.version_info.major}{sys.version_info.minor}"
     run([python, "-m", "pip", "install", "--no-index", "--find-links", wheels, repo / "tests/fixtures/upgrade/shopops_reporter-0.6.0-py3-none-any.whl"], env)
     install_reporter(plugin, home, probe)
+    missing_project = str(home / "unavailable-project")
+    (home / "projects.json").write_text(json.dumps([missing_project]), encoding="utf-8")
     # Current wheel installed, previous daemon running: the original failure.
     run([python, "-c", "from shopops_reporter.config import reporter_home; from shopops_reporter.client import generate_private_key; import json; h=reporter_home(); h.joinpath('device.json').write_text(json.dumps(dict(server_url='http://127.0.0.1:9',device_id='activation-fixture',installation_id='activation-fixture',display_name='activation-fixture',declared_operator=None,private_key_storage='file'))); h.joinpath('device.key').write_text(generate_private_key()[0])"], env)
     try:
@@ -39,6 +41,7 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
             # Synthetic fixture only: show path normalization evidence, never
             # use this diagnostic dump against a developer's real process.
             print(run([python, "-c", "import psutil,json; from shopops_reporter.daemon_control import inspect_daemon; p=psutil.Process(inspect_daemon()['pid']); print(json.dumps(dict(command=p.cmdline(),launcher=p.environ().get('__PYVENV_LAUNCHER__'))))"], env))
+        assert before["unavailable_projects"] == [missing_project]
         assert before["installed_version"] == "0.7.0"
         assert before["daemon"]["runtime_version"] == "0.6.0", before
         assert not before["activation_verified"]
