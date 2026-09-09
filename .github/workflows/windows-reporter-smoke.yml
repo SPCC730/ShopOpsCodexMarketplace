@@ -25,8 +25,11 @@ jobs:
           tests/test_skill_contract.py
           tests/test_wheelhouse.py
           plugins/shopops-onboarding/tests/test_environment.py
+          plugins/shopops-onboarding/tests/test_activation.py
       - name: Verify upgrade and new capability snapshots
         run: python scripts/reporter_upgrade_acceptance.py
+      - name: Verify old daemon activates the installed current runtime
+        run: python scripts/reporter_activation_acceptance.py
       - name: Install locked Reporter payload
         shell: pwsh
         run: |

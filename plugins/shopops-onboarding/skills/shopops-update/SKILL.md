@@ -1,73 +1,30 @@
 ---
 name: shopops-update
-description: Handle an explicitly invoked request to safely update ShopOps Reporter while preserving local device and project state; do not use for initial installation or general diagnostics.
+description: Handle an explicitly invoked update to safely upgrade and activate ShopOps Reporter on this computer, including the running daemon, shell command and existing task entrypoints; preserve pairing, queues and business behavior.
 ---
 
-Act when explicitly invoked or when `shopops-onboard` identifies a required
-update during an authorized onboarding request. Update one Reporter
-installation on the current computer. Never update another machine, run business
-scripts, re-enroll the device, or change project business code.
+Use for a request to update Reporter, including when it is already installed but tasks still use an older version. A completed installation alone is not a completed upgrade. Do not change another computer, device identity, SOP association, result contract, business interpreter, business command, schedule timing or enabled state. Never execute a business task to test an upgrade.
 
-1. From the installed plugin directory, run the same environment probe and
-   checksum-locked `install-preview --json` used by `shopops-onboard`. Use an
-   available CPython 3.11-3.14 interpreter that matches Apple Silicon macOS or
-   Windows x64. If either check fails, report `repair_required` and stop.
-2. Inspect only the standard Reporter home returned by the preview. Determine
-   the active shim target and installed Reporter version without executing an
-   older runtime. Read only sanitized state: whether device metadata exists,
-   counts from the Reporter queue, and the registered project summaries. Never
-   display or copy a private key, pairing code, Cookie, Token, complete identity
-   file, project secret, command environment, or business output.
-3. If the installed version equals the locked version, validate the canonical
-   shim and run that exact runtime's `--json status`. Report `healthy`,
-   `not_paired`, or `repair_required`; do not reinstall a healthy current
-   version.
-4. If the installed version differs, report `upgrade_available` and show the
-   current version, locked target version, platform, Python ABI, runtime and shim
-   paths, pairing-preservation status, queue counts, registered project count,
-   and these update boundaries:
-   - installs a new versioned runtime and atomically repoints the stable shim;
-   - preserves device identity, `.shopops` project configuration, project
-     registry, old runtime, and offline queue;
-   - does not re-pair, re-upload, modify, synchronize, or run a project.
-5. Wait for explicit confirmation of the exact locked target version. Reuse
-   existing authorization only when it covers this exact version and update;
-   an unversioned request is not approval for an arbitrary target.
-6. After confirmation, run `shopops_plugin_helper install --confirm-version
-   <locked-version> --json` with the same interpreter and `PYTHONPATH`. Do not
-   use PyPI or substitute another version. If installation fails, preserve the
-   previous shim/runtime and report `repair_required` with the helper error.
-7. Validate the returned canonical shim, then run the new exact runtime's
-   `--json status`. Compare device identity presence, queue counts, and project
-   registry with the pre-update summary. Report any mismatch instead of trying
-   to recreate state.
-8. List projects that may need a separate `shopops-report sync`: only projects
-   whose dashboard declaration, result/artifact rules, launch command, or
-   Windows wrapper/mapping changed. Do not run `sync` or any business script.
-   Remind the developer to start a new Codex task after a plugin update so the
-   updated skill definitions are loaded.
+## Preview and activate
 
-Removing or updating this Codex plugin does not remove Reporter, its device
-identity, queue, or project launch capability. Reporter cleanup is a separate
-explicit operation and must preview all affected state before confirmation.
+1. From this installed plugin run the environment probe and `shopops_plugin_helper install-preview --json` with the same helper interpreter/PYTHONPATH as shopops-onboard. Use its locked **published** version; no PyPI or candidate substitution. Explain the version, stable shim and preserved old runtime. Check `SHOPOPS_REPORTER_HOME` if set: a different home is a separate installation, not permission to move its identity or queue.
+2. Read sanitized queue counts and registered task references from Reporter home, including `projects.json` and `task-profiles.json`. Do not print credentials, complete metadata, business output or command environments. Back up state privately before changing launch files or PATH; do not erase pending evidence. Read [upgrade activation](../../references/upgrade-activation.md).
+3. Treat the user's request to upgrade and switch existing tasks as authorization for the matching published update, normal Reporter background restart and Reporter-only entrypoint repair. Show the concrete preview, then continue when covered by that request; do not stop again merely because a target version is now known. Ask only if the proposed action expands the scope or would affect an active business run. An installation-only request does not authorize starting a previously stopped daemon.
+4. Run `shopops_plugin_helper upgrade --confirm-version <locked-version> --json`. For an authorized request to start Reporter (including the guide's full upgrade prompt), add `--start-background`. This repairs the canonical shim even when the wheel is already installed, identifies the running daemon, gracefully stops a verified older daemon through its control endpoint, starts the new runtime and verifies the process runtime. Do not use `install` alone for an upgrade. Never kill a PID, delete its marker or claim success if activation fails. Installation can succeed while activation is blocked: explain this explicitly and retain both runtimes and the queue.
+5. Run `shopops_plugin_helper activation-check --json`. `installed_version`, daemon `runtime_version` and `activation_verified` describe different facts. `healthy` alone does not identify the daemon version. macOS may show system Python in argv; the helper examines the verified process's venv launcher metadata. Unknown means unknown.
 
-Reporter 0.5.0 adds contract schema v2. Deploy a backend advertising that schema first.
-An upgrade preserves v1 contracts; it does not migrate or submit them. Migration is a separate
-`result-contract migrate-schema --to v2` operation that creates a candidate and requires one
-administrator review after submission. Ordinary source changes then reuse the approved v2
-contract automatically; business meaning, mapping and reporting scope changes need a new version.
-Never install a candidate build merely because this skill describes its capabilities; use the
-published checksum-locked release selected by the installer.
+## Existing tasks must follow the stable entrypoint
 
-Reporter 0.4.0 adds independent project metadata synchronization and current-device
-ownership. Deploy a compatible ShopOps backend first. Existing YAML stays readable;
-missing metadata is unknown, not a reason to reset project identity. The running
-daemon synchronizes declared metadata without a business run. The update workflow
-does not start it or edit project metadata. Explain `unsupported_server`, failed
-sync and `pending_migration` separately from runtime health, using cached status.
-An upgrade never authorizes device migration, local task termination, or SOP
-execution-mode replacement.
+6. Complete the launcher audit from the reference for **all accessible registered tasks**, including named task profiles. `launchers` covers standard `.shopops` wrappers only; `scheduler_actions`, `shell_path` and `project_python_imports` remain `review_required` until separately checked. Do not call a computer fully upgraded while an entrypoint is pinned, missing, unreadable or unreviewed.
+7. Back up and show each Reporter-only launch change, then apply within the developer's upgrade authorization. Change confirmed old Reporter invocations to the stable shim; preserve project cwd, `--project-dir`, `--task`, arguments, task identifiers and schedule environment/context. Do not regenerate arbitrary custom wrappers or replace their business Python with Reporter Python. If the correct task or invocation cannot be proved, keep it unchanged and list the precise blocker.
+8. Check actual OS scheduler actions and any login/startup service referencing Reporter. Use read-only inspection first. Change only verified Reporter executable/wrapper references; preserve timing, credentials, enabled state, task arguments and working directory. Do not run scheduled tasks, reload a launchd business job (RunAtLoad may execute it), or restart a business APScheduler service. Persisted and currently loaded definitions are separate: if safe activation needs a later business maintenance window, report that task pending. Changed mapping hashes still require the existing mapping confirmation; do not bypass it.
+9. Fix bare command resolution when needed: standard Reporter bin must precede an old pip/venv command in the **user** PATH, preserving all other entries and backing up the previous value. Check current session and a new shell; Windows already-open terminals can retain old PATH. Prefer absolute stable shim references in launchers. Never replace Python/pip executables, upgrade every project venv blindly, or uninstall old Reporter environments that active runs may use.
+10. If a business Python process directly imports `shopops_reporter` (including APScheduler bridge integration), installing the machine runtime cannot replace that import. Inspect the explicitly identified business environment/package metadata without running its entrypoint. Explain the required separate locked dependency update; do not substitute Reporter Python, automatically restart the business scheduler, or mark an untested executor supported.
 
-## 完整接入能力（0.7 协议）
+## Verify and report
 
-需要完整接入时，先读取 [能力接入与服务端回执](../../references/capability-onboarding.md)。遇到 APScheduler 时读取 [应用计划适配](../../references/apscheduler-integration.md)。保留旧项目基础上报；使用 capabilities check 区分配置、验收和本次接收。人工覆盖优先，角色自动绑定不要求逐项目管理员批准；定时映射保留原确认流程。升级软件不代表业务项目已完成适配。
+11. Compare device identity presence, registry references and queue counts with the before summary (normal acknowledged uploads can reduce counts). Check canonical shim version, current shell resolution, verified daemon runtime version and server device version heartbeat independently. The device version heartbeat is sent about every 30 seconds; check the server receipt when accessible, otherwise report it unverified. Historical runs keep their original Reporter versions.
+12. For repaired wrappers use static parsing, not execution. Leave no unreported old-version reference in the checked execution chain. Sync only an explicitly changed project declaration or schedule mapping when covered by the update request, not every project. Contract migration/review is separate.
+13. Report plugin version, installed Reporter, actual daemon version, server heartbeat, checked/updated/pending task entries and PATH status. `activation_verified` is machine daemon evidence, not proof that all external scheduler definitions or business imports have switched. Restart a new Codex task after plugin update to load the new skills.
+
+Reporter 0.7.0 remains the locked runtime for this plugin fix; its wheel and result contract protocol are unchanged. Review [capability receipts](../../references/capability-onboarding.md) and [APScheduler limits](../../references/apscheduler-integration.md) for project adaptation. Software upgrades do not manufacture missing business evidence or grant execution permission.

@@ -1,7 +1,7 @@
 # ShopOps Codex Marketplace
 
 公开的 ShopOps Codex 插件分发仓库。当前发布的
-`shopops-onboarding 0.2.0+codex.20260909151502` 用于安全安装、更新和诊断
+`shopops-onboarding 0.2.0+codex.20260909162241` 用于安全安装、更新和诊断
 `ShopOps Reporter 0.7.0`，并提供经确认的项目接入和运行结果契约配置指引。
 
 Reporter 0.7.0 于 2026-09-09 发布，开发者安装分支为
@@ -211,3 +211,8 @@ Reporter 身份、离线队列或项目配置。
 ### Reporter 0.7.0 完整性接入
 
 支持诊断 v2 与按运行冻结的证据补传、实际脚本环境采集、Codex 角色建议及人工覆盖、APScheduler 3.10/3.11 计划与事件上报、服务端八项能力回执。基础上报与完整接入分开验收，升级不会自动补齐业务脚本没有产生的信息。APScheduler 4.x 和未验证的执行器触发关联不宣称支持。详情见插件 references/capability-onboarding.md。
+
+
+## 2026-09-10：升级后切换已有任务
+
+Reporter 正式 wheel 仍为 0.7.0。本次插件新增 upgrade / activation-check，修复仅安装新版但后台仍用旧版本的问题，并要求逐项检查 PATH、已有包装器、系统计划和业务环境直接导入。更新插件后在新 Codex 任务中使用 shopops-update，完成预览、后台切换、Reporter-only 路径修复和实际版本核验。标准任务使用稳定 bin 入口，不固定 runtime 版本；自定义任务保留原业务命令和调度规则，未经核对的入口明确待处理。详见 plugins/shopops-onboarding/references/upgrade-activation.md。

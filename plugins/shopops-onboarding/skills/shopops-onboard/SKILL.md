@@ -52,6 +52,8 @@ with an older runtime or install an unpublished build as a fallback.
    result is a valid installed-but-unpaired state; do not enroll or pair a device
    in WP1.
 
+If Reporter or registered tasks already exist, an upgrade request must use `shopops-update` and its `upgrade` / `activation-check` flow, even when the target wheel is already installed. Do not report old tasks switched after install alone.
+
 For an installation-only request, stop after installation and health reporting.
 For project onboarding, continue the guided workflow once its capabilities are
 available. Cleanup is a separate

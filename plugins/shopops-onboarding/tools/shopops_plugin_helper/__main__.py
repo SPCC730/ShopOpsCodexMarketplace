@@ -11,6 +11,7 @@ import sys
 from typing import Sequence
 
 from .environment import EnvironmentProbe, probe_environment
+from .activation import activation_check, upgrade_reporter
 from .installer import (
     InstallError,
     default_reporter_home,
@@ -33,6 +34,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     install_parser = subcommands.add_parser("install")
     install_parser.add_argument("--confirm-version", required=True)
     install_parser.add_argument("--json", action="store_true", required=True)
+    activation_parser = subcommands.add_parser("activation-check")
+    activation_parser.add_argument("--json", action="store_true", required=True)
+    upgrade_parser = subcommands.add_parser("upgrade")
+    upgrade_parser.add_argument("--confirm-version", required=True)
+    upgrade_parser.add_argument("--start-background", action="store_true")
+    upgrade_parser.add_argument("--json", action="store_true", required=True)
     args = parser.parse_args(argv)
 
     try:
@@ -58,7 +65,7 @@ def _dispatch(args: argparse.Namespace) -> tuple[int, dict[str, object]]:
             "environment": asdict(probe),
         }
 
-    if args.command in {"install-preview", "install"}:
+    if args.command in {"install-preview", "install", "activation-check", "upgrade"}:
         probe = probe_environment()
         reporter_home = default_reporter_home()
         preview = install_preview(_PLUGIN_ROOT, reporter_home, probe)
@@ -66,12 +73,18 @@ def _dispatch(args: argparse.Namespace) -> tuple[int, dict[str, object]]:
         if args.command == "install-preview":
             return 0, {"schema_version": 1, "install": asdict(preview)}
 
+        if args.command == "activation-check":
+            return 0, {"schema_version": 1, "activation": activation_check(_PLUGIN_ROOT, reporter_home, probe)}
+
         if args.confirm_version != preview.version:
             return 2, {
                 "schema_version": 1,
                 "error": "confirmation_version_mismatch",
                 "version": preview.version,
             }
+        if args.command == "upgrade":
+            result = upgrade_reporter(_PLUGIN_ROOT, reporter_home, probe, start_background=args.start_background)
+            return 0, {"schema_version": 1, **result}
         installed = install_reporter(_PLUGIN_ROOT, reporter_home, probe)
         return 0, {"schema_version": 1, "install": asdict(installed)}
 

@@ -87,3 +87,8 @@ or project launch capability. See [the security policy](../../references/securit
 ## 完整接入能力（0.7 协议）
 
 需要完整接入时，先读取 [能力接入与服务端回执](../../references/capability-onboarding.md)。遇到 APScheduler 时读取 [应用计划适配](../../references/apscheduler-integration.md)。保留旧项目基础上报；使用 capabilities check 区分配置、验收和本次接收。人工覆盖优先，角色自动绑定不要求逐项目管理员批准；定时映射保留原确认流程。升级软件不代表业务项目已完成适配。
+
+
+## Installed versus active version
+
+After validating the current locked runtime, use `shopops_plugin_helper activation-check --json` to compare installed version with the authenticated daemon runtime and audit standard launchers. A healthy old daemon or pinned task wrapper is not a fully updated installation. The CLI status version is not the daemon version. Read [upgrade activation](../../references/upgrade-activation.md); route requested repairs to `shopops-update`. Preserve unreviewed scheduler actions, shell PATH and imported business environments as pending checks.

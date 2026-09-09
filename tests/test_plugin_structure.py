@@ -128,8 +128,13 @@ def test_wp1_skills_keep_the_required_authorization_and_retention_boundaries():
     assert "等待开发者明确确认" in onboard
     assert onboard.index("等待开发者明确确认") < onboard.index("--confirm-version")
     assert "never install, repair, delete, enroll, pair, or change runtime" in doctor
-    assert "Wait for explicit confirmation of the exact locked target version" in update
-    assert "does not re-pair, re-upload, modify, synchronize, or run a project" in update
+    assert "Show the concrete preview" in update
+    assert "the user's request to upgrade and switch existing tasks as authorization" in update
+    assert "--confirm-version <locked-version>" in update
+    assert "Never execute a business task" in update
+    assert "Do not change another computer, device identity, SOP association, result contract" in update
+    assert "activation_verified" in update
+    assert "scheduler_actions" in update
     for text in (onboard, doctor):
         assert "Removing this" in text
         assert "Codex plugin does not remove Reporter" in text
