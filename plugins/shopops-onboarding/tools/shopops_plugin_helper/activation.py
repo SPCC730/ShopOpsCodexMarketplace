@@ -20,7 +20,7 @@ def _run(python: Path, home: Path, arguments: list[str]) -> dict:
     try:
         completed = subprocess.run(
             [str(python), *arguments], env=env, capture_output=True,
-            text=True, timeout=30, check=False,
+            text=True, timeout=60, check=False,
         )
         value = json.loads(completed.stdout)
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
@@ -78,7 +78,7 @@ def upgrade_reporter(plugin: Path, home: Path, probe, *, start_background: bool 
     python = Path(installed.runtime_dir) / "venv" / layout.scripts_directory / layout.python_name
     restarted = daemon["state"] == "healthy" and daemon["runtime_version"] != installed.version
     if restarted:
-        _run(python, home, ["-m", "shopops_reporter", "--json", "stop"])
+        _run(python, home, [str(Path(__file__).with_name("activation_probe.py")), "stop"])
     if restarted or (start_background and daemon["state"] in {"stopped", "stale"}):
         _run(python, home, ["-m", "shopops_reporter", "--json", "start"])
     after = activation_check(plugin, home, probe)

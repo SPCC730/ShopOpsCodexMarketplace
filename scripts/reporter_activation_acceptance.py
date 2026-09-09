@@ -35,6 +35,10 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
     try:
         run([python, "-m", "shopops_reporter", "--json", "start"], env)
         before = activation_check(plugin, home, probe)
+        if before["daemon"]["runtime_version"] is None:
+            # Synthetic fixture only: show path normalization evidence, never
+            # use this diagnostic dump against a developer's real process.
+            print(run([python, "-c", "import psutil,json; from shopops_reporter.daemon_control import inspect_daemon; p=psutil.Process(inspect_daemon()['pid']); print(json.dumps(dict(command=p.cmdline(),launcher=p.environ().get('__PYVENV_LAUNCHER__'))))"], env))
         assert before["installed_version"] == "0.7.0"
         assert before["daemon"]["runtime_version"] == "0.6.0", before
         assert not before["activation_verified"]
@@ -60,4 +64,5 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
         assert python.exists()
         print(json.dumps({"python": sys.version.split()[0], "old_daemon": "0.6.0", "new_daemon": "0.7.0", "idempotent": True, "business_executed": False}))
     finally:
-        run([python, "-m", "shopops_reporter", "--json", "stop"], env)
+        final_python = Path(home / "runtime/0.7.0/venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        run([final_python, plugin / "tools/shopops_plugin_helper/activation_probe.py", "stop"], env)

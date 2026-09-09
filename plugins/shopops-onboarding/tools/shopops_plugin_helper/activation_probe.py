@@ -46,7 +46,7 @@ def inspect() -> dict:
                 # resolve the python symlink itself out of its virtualenv.
                 invoked = Path(executable)
                 relative = (invoked.parent.resolve() / invoked.name).relative_to(reporter_home().resolve() / "runtime")
-                if len(relative.parts) == 4 and relative.parts[1:3] in (("venv", "bin"), ("venv", "Scripts")):
+                if len(relative.parts) == 4 and tuple(p.lower() for p in relative.parts[1:3]) in (("venv", "bin"), ("venv", "scripts")):
                     daemon["runtime_version"] = relative.parts[0]
             except (IndexError, ValueError, psutil.Error):
                 pass
@@ -78,5 +78,27 @@ def inspect() -> dict:
     }
 
 
+def stop_authenticated() -> dict:
+    import psutil
+    from shopops_reporter.daemon_control import inspect_daemon, request_daemon_stop
+
+    state = inspect_daemon()
+    if state["state"] != "healthy":
+        raise RuntimeError("daemon_not_verified")
+    process = psutil.Process(state["pid"])
+    try:
+        request_daemon_stop()
+    except RuntimeError:
+        # Reporter 0.6/0.7's stop command waits only five seconds. Windows
+        # read-only scheduler collection can still be finishing. Never force
+        # termination; wait for this same process to finish naturally.
+        pass
+    process.wait(timeout=45)
+    if inspect_daemon()["state"] not in {"stopped", "stale"}:
+        raise RuntimeError("daemon_changed_during_stop")
+    return {"stopped": True}
+
+
 if __name__ == "__main__":
-    print(json.dumps(inspect()))
+    import sys
+    print(json.dumps(stop_authenticated() if sys.argv[1:] == ["stop"] else inspect()))
