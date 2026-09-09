@@ -83,3 +83,7 @@ separate explicit operation outside WP1 and must first preview affected runtime
 versions, device identity, queued runs, and projects before confirmation.
 Removing this Codex plugin does not remove Reporter, its device identity, queue,
 or project launch capability. See [the security policy](../../references/security-policy.md).
+
+## 完整接入能力（0.7 协议）
+
+需要完整接入时，先读取 [能力接入与服务端回执](../../references/capability-onboarding.md)。遇到 APScheduler 时读取 [应用计划适配](../../references/apscheduler-integration.md)。保留旧项目基础上报；使用 capabilities check 区分配置、验收和本次接收。人工覆盖优先，角色自动绑定不要求逐项目管理员批准；定时映射保留原确认流程。升级软件不代表业务项目已完成适配。

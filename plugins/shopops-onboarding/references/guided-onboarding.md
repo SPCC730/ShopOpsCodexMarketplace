@@ -161,3 +161,7 @@ an empty inventory is not evidence of manual execution, and a launchd exit code
 is not a business result. Partial scans retain previous server records. Updating
 the plugin does not update Reporter: upgrade the device runtime and verify its
 heartbeat and schedule synchronization without running a business SOP.
+
+## 完整接入候选扩展
+
+在已具备 0.7 候选能力的环境，使用 configure-capabilities 预览 diagnostics、ai_readable_artifacts 与 office_role；使用 verify-capabilities 和精确受控测试命令验证八项能力。继续使用原 plan_id/digest、过期和文件变化确认机制。详见 [能力接入](capability-onboarding.md)；本流程不将候选版安装为正式版，不执行未经核实安全性的业务命令。

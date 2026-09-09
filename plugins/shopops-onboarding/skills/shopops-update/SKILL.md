@@ -67,3 +67,7 @@ does not start it or edit project metadata. Explain `unsupported_server`, failed
 sync and `pending_migration` separately from runtime health, using cached status.
 An upgrade never authorizes device migration, local task termination, or SOP
 execution-mode replacement.
+
+## 完整接入能力（0.7 协议）
+
+需要完整接入时，先读取 [能力接入与服务端回执](../../references/capability-onboarding.md)。遇到 APScheduler 时读取 [应用计划适配](../../references/apscheduler-integration.md)。保留旧项目基础上报；使用 capabilities check 区分配置、验收和本次接收。人工覆盖优先，角色自动绑定不要求逐项目管理员批准；定时映射保留原确认流程。升级软件不代表业务项目已完成适配。

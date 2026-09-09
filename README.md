@@ -1,10 +1,10 @@
 # ShopOps Codex Marketplace
 
 公开的 ShopOps Codex 插件分发仓库。当前发布的
-`shopops-onboarding 0.1.14+codex.20260909033000` 用于安全安装、更新和诊断
-`ShopOps Reporter 0.6.0`，并提供经确认的项目接入和运行结果契约配置指引。
+`shopops-onboarding 0.2.0+codex.20260909151502` 用于安全安装、更新和诊断
+`ShopOps Reporter 0.7.0`，并提供经确认的项目接入和运行结果契约配置指引。
 
-Reporter 0.6.0 于 2026-09-09 发布，开发者安装分支为
+Reporter 0.7.0 于 2026-09-09 发布，开发者安装分支为
 `codex/shopops-plugin-dev`。插件版本与 Reporter 版本分别管理，更新插件不会
 自动升级本机 Reporter。
 
@@ -12,7 +12,7 @@ Reporter 0.6.0 于 2026-09-09 发布，开发者安装分支为
 
 Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约，业务口径、
 映射和上报范围变化才提交新版本。现有 v1 项目需要一次迁移审核；升级不会自动迁移。
-当前正式离线分发为 0.6.0，包含统一接入向导和 Windows 任务计划错误码兼容修复。
+当前正式离线分发为 0.7.0，包含统一接入向导和 Windows 任务计划错误码兼容修复。
 
 - [插件版本](plugins/shopops-onboarding/.codex-plugin/plugin.json)
 - [Reporter 分发清单](plugins/shopops-onboarding/reporter-manifest.json)
@@ -25,7 +25,7 @@ Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约�
 
 ## 开发者 5 分钟开始
 
-### Reporter 0.6.0 更新说明
+### Reporter 0.7.0 更新说明
 
 - 新增 macOS launchd 日历与间隔计划采集，每 60 秒只读同步关联已接入 SOP 的计划。
 - AppleScript 等复杂包装器可用 `map-schedule --label LABEL --project-dir DIR [--task UUID]` 声明归属，再沿用计划确认流程。
@@ -38,7 +38,7 @@ Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约�
 - 保留设备身份、原任务配置和离线队列；更新插件不会自动升级 Reporter 或迁移 v1 契约。
 
 管理员先部署声明 `task_profiles: 1`、`onboarding_verification: 1` 及结果契约 v2 的后端。
-开发者更新插件并新建 Codex 任务后，通过 `$shopops-update` 确认升级至 0.6.0。
+开发者更新插件并新建 Codex 任务后，通过 `$shopops-update` 确认升级至 0.7.0。
 
 ### Reporter 0.4.2 更新说明
 
@@ -48,7 +48,7 @@ Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约�
 - 保留 0.4.1 的指纹、契约快照与后台身份修复，八套离线包的第三方依赖不变。
 
 管理员先部署支持设备版本心跳的后端。开发者更新本插件后，在新 Codex 任务中调用
-`$shopops-update`，确认目标 **0.6.0** 并升级。确认旧后台身份后正常停止旧进程，再启动新版；
+`$shopops-update`，确认目标 **0.7.0** 并升级。确认旧后台身份后正常停止旧进程，再启动新版；
 仅更新插件或安装新包不会替换已运行的旧进程。不得仅凭 PID 结束进程。
 后台上报成功后，外部接入设备列表在下一次刷新时显示新版本；页面可见时约每 15 秒刷新。
 无需重新配对、重新初始化项目或运行业务脚本，不修改历史结果，设备身份和离线队列保留。
@@ -62,7 +62,7 @@ Reporter 0.5.0 新增结果契约 v2：代码变化自动复用已审核契约�
 - 八套离线包覆盖 macOS arm64、Windows x64 的 CPython 3.11–3.14，均包含 `psutil`。
 
 管理员先部署支持 v2 指纹契约的 ShopOps 后端。开发者更新本插件后，在新 Codex 任务中
-调用 `$shopops-update` 升级到当前 **0.6.0**（包含 0.4.1 修复）。插件更新本身不会升级 Reporter，也不会重启旧后台。
+调用 `$shopops-update` 升级到当前 **0.7.0**（包含 0.4.1 修复）。插件更新本身不会升级 Reporter，也不会重启旧后台。
 旧后台仅有 PID 标记时，新版将显示 `legacy_unverified`；需从原启动终端或服务管理器
 确认并正常停止旧进程，再启动新版，不能仅凭 PID 结束其他程序。
 
@@ -206,3 +206,8 @@ Reporter 身份、离线队列或项目配置。
 [OpenAI Plugins 文档](https://developers.openai.com/codex/plugins)；Marketplace
 添加命令参考
 [OpenAI 插件打包文档](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)。
+
+
+### Reporter 0.7.0 完整性接入
+
+支持诊断 v2 与按运行冻结的证据补传、实际脚本环境采集、Codex 角色建议及人工覆盖、APScheduler 3.10/3.11 计划与事件上报、服务端八项能力回执。基础上报与完整接入分开验收，升级不会自动补齐业务脚本没有产生的信息。APScheduler 4.x 和未验证的执行器触发关联不宣称支持。详情见插件 references/capability-onboarding.md。

@@ -15,7 +15,7 @@
 批量不运行脚本，待审核和待验收会保留进度。详见
 [统一接入向导](references/guided-onboarding.md)。
 
-当前离线发行版本为 Reporter **0.6.0**，新增 macOS launchd 定时计划采集。
+当前离线发行版本为 Reporter **0.7.0**，新增 macOS launchd 定时计划采集。
 只同步关联已接入 SOP 的日历／间隔计划；复杂包装器用 `map-schedule --label LABEL --project-dir DIR [--task UUID]`
 声明归属，不改动原定时任务。系统未提供的运行时间保持未知，cron 和常驻看板不在本期范围内。
 保留结果契约 v2 与带签名的独立设备版本心跳，修复
@@ -91,3 +91,5 @@ or project launch capability. Reporter cleanup is a separate explicit operation
 outside WP1 and must preview affected runtime versions, identity, queued runs,
 and projects before explicit confirmation. See
 [the security policy](references/security-policy.md).
+
+完整接入协议见 [能力接入](references/capability-onboarding.md) 和 [APScheduler 适配](references/apscheduler-integration.md)。升级仍需逐项目核对真实服务端回执，不能仅凭版本宣称完整接入。
