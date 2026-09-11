@@ -93,3 +93,6 @@ and projects before explicit confirmation. See
 [the security policy](references/security-policy.md).
 
 完整接入协议见 [能力接入](references/capability-onboarding.md) 和 [APScheduler 适配](references/apscheduler-integration.md)。升级仍需逐项目核对真实服务端回执，不能仅凭版本宣称完整接入。
+
+
+Reporter 0.7.2：仅同步明确关联已接入 SOP 的计划与对应事件。系统维护、软件更新和无关联计划不上传，Windows 不凭任务名称猜测归属。映射读取失败保留服务器记录；旧队列重新过滤。历史无关联数据归档供管理员排查。不会修改或执行本机实际任务。

@@ -93,6 +93,8 @@ jobs:
             Get-Content (Join-Path $reporterHome "reporter.log") -ErrorAction SilentlyContinue
             throw "Reporter daemon is not running"
           }
+          & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\schedule_scope_acceptance.py")
+          if ($LASTEXITCODE -ne 0) { throw "Schedule scope acceptance failed" }
           & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\native_reporter_acceptance.py")
           if ($LASTEXITCODE -ne 0) { throw "Guided onboarding acceptance failed" }
           & $runtimePython (Join-Path $env:GITHUB_WORKSPACE "scripts\contract_v2_acceptance.py")
