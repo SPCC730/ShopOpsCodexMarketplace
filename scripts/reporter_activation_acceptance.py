@@ -42,7 +42,7 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
             # use this diagnostic dump against a developer's real process.
             print(run([python, "-c", "import psutil,json; from shopops_reporter.daemon_control import inspect_daemon; p=psutil.Process(inspect_daemon()['pid']); print(json.dumps(dict(command=p.cmdline(),launcher=p.environ().get('__PYVENV_LAUNCHER__'))))"], env))
         assert before["unavailable_projects"] == [missing_project]
-        assert before["installed_version"] == "0.7.0"
+        assert before["installed_version"] == "0.7.2"
         assert before["daemon"]["runtime_version"] == "0.6.0", before
         assert not before["activation_verified"]
         result = upgrade_reporter(plugin, home, probe)
@@ -63,9 +63,9 @@ with tempfile.TemporaryDirectory(prefix="shopops-activation-") as folder:
         command = [shim_python, "-c", "import shopops_reporter; print(shopops_reporter.__version__)"]
         if os.name == "nt":
             command = ["cmd.exe", "/d", "/c", *command]
-        assert run(command, env).strip() == "0.7.0"
+        assert run(command, env).strip() == "0.7.2"
         assert python.exists()
-        print(json.dumps({"python": sys.version.split()[0], "old_daemon": "0.6.0", "new_daemon": "0.7.0", "idempotent": True, "business_executed": False}))
+        print(json.dumps({"python": sys.version.split()[0], "old_daemon": "0.6.0", "new_daemon": "0.7.2", "idempotent": True, "business_executed": False}))
     finally:
-        final_python = Path(home / "runtime/0.7.0/venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        final_python = Path(home / "runtime/0.7.2/venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
         run([final_python, plugin / "tools/shopops_plugin_helper/activation_probe.py", "stop"], env)

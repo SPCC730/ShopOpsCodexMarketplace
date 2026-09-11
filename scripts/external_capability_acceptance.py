@@ -10,7 +10,7 @@ from shopops_reporter.config import ProjectConfig
 from shopops_reporter.runner import run_project
 from shopops_reporter.spool import Spool
 
-assert __version__ == '0.7.0'
+assert __version__ == '0.7.2'
 with tempfile.TemporaryDirectory(prefix='shopops-candidate-') as folder:
     root = Path(folder)
     os.environ['SHOPOPS_REPORTER_HOME'] = str(root / '.reporter')

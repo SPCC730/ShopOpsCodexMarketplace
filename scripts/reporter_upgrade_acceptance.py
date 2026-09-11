@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix='shopops-upgrade-') as folder:
     run([old_python,'-c',"from shopops_reporter.spool import Spool; import sqlite3; s=Spool(); c=sqlite3.connect(s.path); c.execute(\"INSERT INTO local_run(local_run_key,integration_id,project_dir,config_json,project_fingerprint,git_json,environment_json,started_at,created_at) VALUES ('pending','fixture','fixture','{}','fixture','{}','{}','2026-09-09T00:00:00Z',1)\"); c.commit()"],env)
     preview=install_preview(plugin,home,probe)
     installed=install_reporter(plugin,home,probe)
-    assert installed.version==preview.version=='0.7.0'
+    assert installed.version==preview.version=='0.7.2'
     python=Path(installed.runtime_dir)/'venv'/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
     preserved=run([python,'-c',"from shopops_reporter.spool import Spool; s=Spool(); r=s.get_run('pending'); assert r['project_fingerprint']=='fixture' and r['upload_state']=='pending'; print('preserved')"],env)
     assert preserved.strip()=='preserved'
@@ -37,4 +37,4 @@ with tempfile.TemporaryDirectory(prefix='shopops-upgrade-') as folder:
     assert old_python.exists()
     assert not install_reporter(plugin,home,probe).changed
     result=run([python,repo/'scripts/external_capability_acceptance.py'],env)
-    print(json.dumps({'python':sys.version.split()[0],'upgrade':'0.6.0 -> 0.7.0','queue_preserved':True,'idempotent':True,'acceptance':json.loads(result)}))
+    print(json.dumps({'python':sys.version.split()[0],'upgrade':'0.6.0 -> 0.7.2','queue_preserved':True,'idempotent':True,'acceptance':json.loads(result)}))
